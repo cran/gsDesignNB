@@ -1,0 +1,1656 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Sample size re-estimation example</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Sample size re-estimation example</h1>
+
+
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(gsDesignNB)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(gsDesign)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">library</span>(data.table)</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">library</span>(MASS)</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="fu">library</span>(gt)</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="fu">library</span>(gt)</span></code></pre></div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>This vignette demonstrates a group sequential trial with a single
+interim analysis where unblinded sample size re-estimation (SSR) is
+performed.</p>
+<p>We simulate a scenario where the <strong>control event rate is lower
+than assumed</strong> and the <strong>dispersion is higher than
+assumed</strong>. Both factors lead to slower information accumulation
+(or higher variance) than planned. We will show how to:</p>
+<ol style="list-style-type: decimal">
+<li>Monitor information accumulation at an interim analysis.</li>
+<li>Re-estimate the required sample size (or duration) to achieve the
+target power.</li>
+<li>Adjust the final analysis bounds if the final information differs
+from the plan.</li>
+</ol>
+</div>
+<div id="trial-setup-and-initial-design" class="section level2">
+<h2>Trial setup and initial design</h2>
+<p><strong>Planned parameters:</strong></p>
+<ul>
+<li>Control rate (<span class="math inline">\(\lambda_1\)</span>): 0.1
+events/month</li>
+<li>Experimental rate (<span class="math inline">\(\lambda_2\)</span>):
+0.075 events/month (Hazard Ratio = 0.75)</li>
+<li>Dispersion (<span class="math inline">\(k\)</span>): 0.5</li>
+<li>Power: 90%</li>
+<li>One-sided Type I error (<span class="math inline">\(\alpha\)</span>): 0.025</li>
+<li>Enrollment: 20 patients/month for 12 months (Total N = 240)</li>
+<li>Study duration: 24 months</li>
+</ul>
+<p><strong>Actual parameters (simulation truth):</strong></p>
+<ul>
+<li>Control rate (<span class="math inline">\(\lambda_1\)</span>): 0.08
+events/month (Lower than planned)</li>
+<li>Experimental rate (<span class="math inline">\(\lambda_2\)</span>):
+0.06 events/month (HR = 0.75 maintained)</li>
+<li>Dispersion (<span class="math inline">\(k\)</span>): 0.65 (Higher
+than planned)</li>
+</ul>
+<div id="initial-sample-size-calculation" class="section level3">
+<h3>Initial sample size calculation</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># Planned parameters</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>lambda1_plan <span class="ot">&lt;-</span> <span class="fl">0.1</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>lambda2_plan <span class="ot">&lt;-</span> <span class="fl">0.075</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>k_plan <span class="ot">&lt;-</span> <span class="fl">0.5</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>power_plan <span class="ot">&lt;-</span> <span class="fl">0.9</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>alpha_plan <span class="ot">&lt;-</span> <span class="fl">0.025</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>accrual_rate_plan <span class="ot">&lt;-</span> <span class="dv">20</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>accrual_dur_plan <span class="ot">&lt;-</span> <span class="dv">12</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>trial_dur_plan <span class="ot">&lt;-</span> <span class="dv">24</span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="co"># Calculate sample size</span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>design_plan <span class="ot">&lt;-</span> <span class="fu">sample_size_nbinom</span>(</span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>  <span class="at">lambda1 =</span> lambda1_plan,</span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a>  <span class="at">lambda2 =</span> lambda2_plan,</span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>  <span class="at">dispersion =</span> k_plan,</span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a>  <span class="at">power =</span> power_plan,</span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a>  <span class="at">alpha =</span> alpha_plan,</span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a>  <span class="at">accrual_rate =</span> accrual_rate_plan,</span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a>  <span class="at">accrual_duration =</span> accrual_dur_plan,</span>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a>  <span class="at">trial_duration =</span> trial_dur_plan,</span>
+<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a>  <span class="at">max_followup =</span> <span class="dv">12</span></span>
+<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a>)</span>
+<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a></span>
+<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a><span class="co"># Convert to group sequential design</span></span>
+<span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a>gs_plan <span class="ot">&lt;-</span> design_plan <span class="sc">|&gt;</span> </span>
+<span id="cb2-26"><a href="#cb2-26" tabindex="-1"></a>   <span class="fu">gsNBCalendar</span>(</span>
+<span id="cb2-27"><a href="#cb2-27" tabindex="-1"></a>     <span class="at">k =</span> <span class="dv">2</span>,</span>
+<span id="cb2-28"><a href="#cb2-28" tabindex="-1"></a>     <span class="at">test.type =</span> <span class="dv">4</span>, <span class="co"># Non-binding futility</span></span>
+<span id="cb2-29"><a href="#cb2-29" tabindex="-1"></a>     <span class="at">alpha =</span> alpha_plan,</span>
+<span id="cb2-30"><a href="#cb2-30" tabindex="-1"></a>     <span class="at">sfu =</span> sfHSD,</span>
+<span id="cb2-31"><a href="#cb2-31" tabindex="-1"></a>     <span class="at">sfupar =</span> <span class="sc">-</span><span class="dv">2</span>, <span class="co"># Moderately aggressive alpha-spending</span></span>
+<span id="cb2-32"><a href="#cb2-32" tabindex="-1"></a>     <span class="at">sfl =</span> sfHSD,</span>
+<span id="cb2-33"><a href="#cb2-33" tabindex="-1"></a>     <span class="at">sflpar =</span> <span class="dv">1</span>, <span class="co"># Pocock-like futility spending</span></span>
+<span id="cb2-34"><a href="#cb2-34" tabindex="-1"></a>     <span class="at">analysis_times =</span> <span class="fu">c</span>(accrual_dur_plan <span class="sc">-</span> <span class="dv">2</span>, trial_dur_plan)</span>
+<span id="cb2-35"><a href="#cb2-35" tabindex="-1"></a>   ) <span class="sc">|&gt;</span> gsDesignNB<span class="sc">::</span><span class="fu">toInteger</span>() <span class="co"># Round to integer sample size</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">summary</span>(gs_plan)</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co">#&gt; Asymmetric two-sided with non-binding futility bound group sequential design</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co">#&gt; for negative binomial outcomes, 2 analyses, total sample size 882.0, 90 percent</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co">#&gt; power, 2.5 percent (1-sided) Type I error. Control rate 0.1000, treatment rate</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co">#&gt; 0.0750, risk ratio 0.7500, dispersion 0.5000. Accrual duration 12.0, trial</span></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co">#&gt; duration 24.0, max follow-up 12.0, average exposure 12.00. Randomization ratio</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#&gt; 1:1. Upper spending: Hwang-Shih-DeCani (gamma = -2) Lower spending:</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt; Hwang-Shih-DeCani (gamma = 1)</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt; Asymmetric two-sided with non-binding futility bound group sequential design</span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#&gt; for negative binomial outcomes, 2 analyses, total sample size 882.0, 90 percent</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt; power, 2.5 percent (1-sided) Type I error. Control rate 0.1000, treatment rate</span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt; 0.0750, risk ratio 0.7500, dispersion 0.5000. Accrual duration 12.0, trial</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt; duration 24.0, max follow-up 12.0, average exposure 12.00. Randomization ratio</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt; 1:1. Upper spending: Hwang-Shih-DeCani (gamma = -2) Lower spending:</span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt; Hwang-Shih-DeCani (gamma = 1)</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">gsBoundSummary</span>(gs_plan,</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>    <span class="at">deltaname =</span> <span class="st">&quot;RR&quot;</span>,</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>    <span class="at">logdelta =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>    <span class="at">Nname =</span> <span class="st">&quot;Information&quot;</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>    <span class="at">timename =</span> <span class="st">&quot;Month&quot;</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>    <span class="at">digits =</span> <span class="dv">4</span>,</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>    <span class="at">ddigits =</span> <span class="dv">2</span>) <span class="sc">|&gt;</span> <span class="fu">gt</span>() <span class="sc">|&gt;</span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>  <span class="fu">tab_header</span>(</span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">&quot;Group Sequential Design Bounds for Negative Binomial Outcome&quot;</span>,</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="fu">paste0</span>(</span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>      <span class="st">&quot;N = &quot;</span>, <span class="fu">ceiling</span>(gs_plan<span class="sc">$</span>n_total[gs_plan<span class="sc">$</span>k]),</span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>      <span class="st">&quot;, Expected events = &quot;</span>, <span class="fu">round</span>(gs_plan<span class="sc">$</span>nb_design<span class="sc">$</span>total_events, <span class="dv">1</span>)</span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a>    )</span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a>  )</span></code></pre></div>
+<div id="imifechfdp" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#imifechfdp table {
+font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+-webkit-font-smoothing: antialiased;
+-moz-osx-font-smoothing: grayscale;
+}
+#imifechfdp thead, #imifechfdp tbody, #imifechfdp tfoot, #imifechfdp tr, #imifechfdp td, #imifechfdp th {
+border-style: none;
+}
+#imifechfdp p {
+margin: 0;
+padding: 0;
+}
+#imifechfdp .gt_table {
+display: table;
+border-collapse: collapse;
+line-height: normal;
+margin-left: auto;
+margin-right: auto;
+color: #333333;
+font-size: 16px;
+font-weight: normal;
+font-style: normal;
+background-color: #FFFFFF;
+width: auto;
+border-top-style: solid;
+border-top-width: 2px;
+border-top-color: #A8A8A8;
+border-right-style: none;
+border-right-width: 2px;
+border-right-color: #D3D3D3;
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #A8A8A8;
+border-left-style: none;
+border-left-width: 2px;
+border-left-color: #D3D3D3;
+}
+#imifechfdp .gt_caption {
+padding-top: 4px;
+padding-bottom: 4px;
+}
+#imifechfdp .gt_title {
+color: #333333;
+font-size: 125%;
+font-weight: initial;
+padding-top: 4px;
+padding-bottom: 4px;
+padding-left: 5px;
+padding-right: 5px;
+border-bottom-color: #FFFFFF;
+border-bottom-width: 0;
+}
+#imifechfdp .gt_subtitle {
+color: #333333;
+font-size: 85%;
+font-weight: initial;
+padding-top: 3px;
+padding-bottom: 5px;
+padding-left: 5px;
+padding-right: 5px;
+border-top-color: #FFFFFF;
+border-top-width: 0;
+}
+#imifechfdp .gt_heading {
+background-color: #FFFFFF;
+text-align: center;
+border-bottom-color: #FFFFFF;
+border-left-style: none;
+border-left-width: 1px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 1px;
+border-right-color: #D3D3D3;
+}
+#imifechfdp .gt_bottom_border {
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+}
+#imifechfdp .gt_col_headings {
+border-top-style: solid;
+border-top-width: 2px;
+border-top-color: #D3D3D3;
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+border-left-style: none;
+border-left-width: 1px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 1px;
+border-right-color: #D3D3D3;
+}
+#imifechfdp .gt_col_heading {
+color: #333333;
+background-color: #FFFFFF;
+font-size: 100%;
+font-weight: normal;
+text-transform: inherit;
+border-left-style: none;
+border-left-width: 1px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 1px;
+border-right-color: #D3D3D3;
+vertical-align: bottom;
+padding-top: 5px;
+padding-bottom: 6px;
+padding-left: 5px;
+padding-right: 5px;
+overflow-x: hidden;
+}
+#imifechfdp .gt_column_spanner_outer {
+color: #333333;
+background-color: #FFFFFF;
+font-size: 100%;
+font-weight: normal;
+text-transform: inherit;
+padding-top: 0;
+padding-bottom: 0;
+padding-left: 4px;
+padding-right: 4px;
+}
+#imifechfdp .gt_column_spanner_outer:first-child {
+padding-left: 0;
+}
+#imifechfdp .gt_column_spanner_outer:last-child {
+padding-right: 0;
+}
+#imifechfdp .gt_column_spanner {
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+vertical-align: bottom;
+padding-top: 5px;
+padding-bottom: 5px;
+overflow-x: hidden;
+display: inline-block;
+width: 100%;
+}
+#imifechfdp .gt_spanner_row {
+border-bottom-style: hidden;
+}
+#imifechfdp .gt_group_heading {
+padding-top: 8px;
+padding-bottom: 8px;
+padding-left: 5px;
+padding-right: 5px;
+color: #333333;
+background-color: #FFFFFF;
+font-size: 100%;
+font-weight: initial;
+text-transform: inherit;
+border-top-style: solid;
+border-top-width: 2px;
+border-top-color: #D3D3D3;
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+border-left-style: none;
+border-left-width: 1px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 1px;
+border-right-color: #D3D3D3;
+vertical-align: middle;
+text-align: left;
+}
+#imifechfdp .gt_empty_group_heading {
+padding: 0.5px;
+color: #333333;
+background-color: #FFFFFF;
+font-size: 100%;
+font-weight: initial;
+border-top-style: solid;
+border-top-width: 2px;
+border-top-color: #D3D3D3;
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+vertical-align: middle;
+}
+#imifechfdp .gt_from_md > :first-child {
+margin-top: 0;
+}
+#imifechfdp .gt_from_md > :last-child {
+margin-bottom: 0;
+}
+#imifechfdp .gt_row {
+padding-top: 8px;
+padding-bottom: 8px;
+padding-left: 5px;
+padding-right: 5px;
+margin: 10px;
+border-top-style: solid;
+border-top-width: 1px;
+border-top-color: #D3D3D3;
+border-left-style: none;
+border-left-width: 1px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 1px;
+border-right-color: #D3D3D3;
+vertical-align: middle;
+overflow-x: hidden;
+}
+#imifechfdp .gt_stub {
+color: #333333;
+background-color: #FFFFFF;
+font-size: 100%;
+font-weight: initial;
+text-transform: inherit;
+border-right-style: solid;
+border-right-width: 2px;
+border-right-color: #D3D3D3;
+padding-left: 5px;
+padding-right: 5px;
+}
+#imifechfdp .gt_stub_row_group {
+color: #333333;
+background-color: #FFFFFF;
+font-size: 100%;
+font-weight: initial;
+text-transform: inherit;
+border-right-style: solid;
+border-right-width: 2px;
+border-right-color: #D3D3D3;
+padding-left: 5px;
+padding-right: 5px;
+vertical-align: top;
+}
+#imifechfdp .gt_row_group_first td {
+border-top-width: 2px;
+}
+#imifechfdp .gt_row_group_first th {
+border-top-width: 2px;
+}
+#imifechfdp .gt_summary_row {
+color: #333333;
+background-color: #FFFFFF;
+text-transform: inherit;
+padding-top: 8px;
+padding-bottom: 8px;
+padding-left: 5px;
+padding-right: 5px;
+}
+#imifechfdp .gt_first_summary_row {
+border-top-style: solid;
+border-top-color: #D3D3D3;
+}
+#imifechfdp .gt_first_summary_row.thick {
+border-top-width: 2px;
+}
+#imifechfdp .gt_last_summary_row {
+padding-top: 8px;
+padding-bottom: 8px;
+padding-left: 5px;
+padding-right: 5px;
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+}
+#imifechfdp .gt_grand_summary_row {
+color: #333333;
+background-color: #FFFFFF;
+text-transform: inherit;
+padding-top: 8px;
+padding-bottom: 8px;
+padding-left: 5px;
+padding-right: 5px;
+}
+#imifechfdp .gt_first_grand_summary_row {
+padding-top: 8px;
+padding-bottom: 8px;
+padding-left: 5px;
+padding-right: 5px;
+border-top-style: double;
+border-top-width: 6px;
+border-top-color: #D3D3D3;
+}
+#imifechfdp .gt_last_grand_summary_row_top {
+padding-top: 8px;
+padding-bottom: 8px;
+padding-left: 5px;
+padding-right: 5px;
+border-bottom-style: double;
+border-bottom-width: 6px;
+border-bottom-color: #D3D3D3;
+}
+#imifechfdp .gt_striped {
+background-color: rgba(128, 128, 128, 0.05);
+}
+#imifechfdp .gt_table_body {
+border-top-style: solid;
+border-top-width: 2px;
+border-top-color: #D3D3D3;
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+}
+#imifechfdp .gt_footnotes {
+color: #333333;
+background-color: #FFFFFF;
+border-bottom-style: none;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+border-left-style: none;
+border-left-width: 2px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 2px;
+border-right-color: #D3D3D3;
+}
+#imifechfdp .gt_footnote {
+margin: 0px;
+font-size: 90%;
+padding-top: 4px;
+padding-bottom: 4px;
+padding-left: 5px;
+padding-right: 5px;
+}
+#imifechfdp .gt_sourcenotes {
+color: #333333;
+background-color: #FFFFFF;
+border-bottom-style: none;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+border-left-style: none;
+border-left-width: 2px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 2px;
+border-right-color: #D3D3D3;
+}
+#imifechfdp .gt_sourcenote {
+font-size: 90%;
+padding-top: 4px;
+padding-bottom: 4px;
+padding-left: 5px;
+padding-right: 5px;
+}
+#imifechfdp .gt_left {
+text-align: left;
+}
+#imifechfdp .gt_center {
+text-align: center;
+}
+#imifechfdp .gt_right {
+text-align: right;
+font-variant-numeric: tabular-nums;
+}
+#imifechfdp .gt_font_normal {
+font-weight: normal;
+}
+#imifechfdp .gt_font_bold {
+font-weight: bold;
+}
+#imifechfdp .gt_font_italic {
+font-style: italic;
+}
+#imifechfdp .gt_super {
+font-size: 65%;
+}
+#imifechfdp .gt_footnote_marks {
+font-size: 75%;
+vertical-align: 0.4em;
+position: initial;
+}
+#imifechfdp .gt_asterisk {
+font-size: 100%;
+vertical-align: 0;
+}
+#imifechfdp .gt_indent_1 {
+text-indent: 5px;
+}
+#imifechfdp .gt_indent_2 {
+text-indent: 10px;
+}
+#imifechfdp .gt_indent_3 {
+text-indent: 15px;
+}
+#imifechfdp .gt_indent_4 {
+text-indent: 20px;
+}
+#imifechfdp .gt_indent_5 {
+text-indent: 25px;
+}
+#imifechfdp .katex-display {
+display: inline-flex !important;
+margin-bottom: 0.75em !important;
+}
+#imifechfdp div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+height: 0px !important;
+}
+</style>
+<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+  <thead>
+    <tr class="gt_heading">
+      <td colspan="4" class="gt_heading gt_title gt_font_normal" style>Group Sequential Design Bounds for Negative Binomial Outcome</td>
+    </tr>
+    <tr class="gt_heading">
+      <td colspan="4" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border" style>N = 882, Expected events = 785.4</td>
+    </tr>
+    <tr class="gt_col_headings">
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="Analysis">Analysis</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="Value">Value</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="Efficacy">Efficacy</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="Futility">Futility</th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr><td headers="Analysis" class="gt_row gt_left">IA 1: 43%</td>
+<td headers="Value" class="gt_row gt_left">Z</td>
+<td headers="Efficacy" class="gt_row gt_right">2.5498</td>
+<td headers="Futility" class="gt_row gt_right">0.7234</td></tr>
+    <tr><td headers="Analysis" class="gt_row gt_left">Information: 64.85</td>
+<td headers="Value" class="gt_row gt_left">p (1-sided)</td>
+<td headers="Efficacy" class="gt_row gt_right">0.0054</td>
+<td headers="Futility" class="gt_row gt_right">0.2347</td></tr>
+    <tr><td headers="Analysis" class="gt_row gt_left">Month: 10</td>
+<td headers="Value" class="gt_row gt_left">~RR at bound</td>
+<td headers="Efficacy" class="gt_row gt_right">0.7286</td>
+<td headers="Futility" class="gt_row gt_right">0.9141</td></tr>
+    <tr><td headers="Analysis" class="gt_row gt_left"></td>
+<td headers="Value" class="gt_row gt_left">P(Cross) if RR=1</td>
+<td headers="Efficacy" class="gt_row gt_right">0.0054</td>
+<td headers="Futility" class="gt_row gt_right">0.7653</td></tr>
+    <tr><td headers="Analysis" class="gt_row gt_left"></td>
+<td headers="Value" class="gt_row gt_left">P(Cross) if RR=0.75</td>
+<td headers="Efficacy" class="gt_row gt_right">0.4077</td>
+<td headers="Futility" class="gt_row gt_right">0.0556</td></tr>
+    <tr><td headers="Analysis" class="gt_row gt_left">Final</td>
+<td headers="Value" class="gt_row gt_left">Z</td>
+<td headers="Efficacy" class="gt_row gt_right">2.0152</td>
+<td headers="Futility" class="gt_row gt_right">2.0152</td></tr>
+    <tr><td headers="Analysis" class="gt_row gt_left">Information: 149.77</td>
+<td headers="Value" class="gt_row gt_left">p (1-sided)</td>
+<td headers="Efficacy" class="gt_row gt_right">0.0219</td>
+<td headers="Futility" class="gt_row gt_right">0.0219</td></tr>
+    <tr><td headers="Analysis" class="gt_row gt_left">Month: 24</td>
+<td headers="Value" class="gt_row gt_left">~RR at bound</td>
+<td headers="Efficacy" class="gt_row gt_right">0.8481</td>
+<td headers="Futility" class="gt_row gt_right">0.8481</td></tr>
+    <tr><td headers="Analysis" class="gt_row gt_left"></td>
+<td headers="Value" class="gt_row gt_left">P(Cross) if RR=1</td>
+<td headers="Efficacy" class="gt_row gt_right">0.0219</td>
+<td headers="Futility" class="gt_row gt_right">0.9781</td></tr>
+    <tr><td headers="Analysis" class="gt_row gt_left"></td>
+<td headers="Value" class="gt_row gt_left">P(Cross) if RR=0.75</td>
+<td headers="Efficacy" class="gt_row gt_right">0.9027</td>
+<td headers="Futility" class="gt_row gt_right">0.0973</td></tr>
+  </tbody>
+  
+</table>
+</div>
+</div>
+</div>
+<div id="simulation" class="section level2">
+<h2>Simulation</h2>
+<p>We simulate the trial with the same rate ratio, but lower actual
+rates and a higher dispersion. We will limit the maximum sample size to
+40% more than the planned size (i.e., max N = ) to avoid unbounded
+increases.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co"># Actual parameters</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>lambda1_true <span class="ot">&lt;-</span> <span class="fl">0.08</span> <span class="co"># Lower event rates, same rr</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>lambda2_true <span class="ot">&lt;-</span> <span class="fl">0.06</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>k_true <span class="ot">&lt;-</span> <span class="fl">0.65</span> <span class="co"># Higher dispersion</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co"># Enrollment and rates for simulation</span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co"># We simulate a larger pool to allow for potential sample size increase</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>enroll_rate <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">rate =</span> accrual_rate_plan, <span class="at">duration =</span> accrual_dur_plan <span class="sc">*</span> <span class="dv">2</span>) </span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>fail_rate <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>  <span class="at">treatment =</span> <span class="fu">c</span>(<span class="st">&quot;Control&quot;</span>, <span class="st">&quot;Experimental&quot;</span>),</span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a>  <span class="at">rate =</span> <span class="fu">c</span>(lambda1_true, lambda2_true),</span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>  <span class="at">dispersion =</span> k_true</span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>)</span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a>dropout_rate <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a>  <span class="at">treatment =</span> <span class="fu">c</span>(<span class="st">&quot;Control&quot;</span>, <span class="st">&quot;Experimental&quot;</span>),</span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a>  <span class="at">rate =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>),</span>
+<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a>  <span class="at">duration =</span> <span class="fu">c</span>(<span class="dv">100</span>, <span class="dv">100</span>)</span>
+<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a>)</span>
+<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a></span>
+<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a>sim_data <span class="ot">&lt;-</span> <span class="fu">nb_sim</span>(</span>
+<span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a>  <span class="at">enroll_rate =</span> enroll_rate,</span>
+<span id="cb5-24"><a href="#cb5-24" tabindex="-1"></a>  <span class="at">fail_rate =</span> fail_rate,</span>
+<span id="cb5-25"><a href="#cb5-25" tabindex="-1"></a>  <span class="at">dropout_rate =</span> dropout_rate,</span>
+<span id="cb5-26"><a href="#cb5-26" tabindex="-1"></a>  <span class="at">max_followup =</span> trial_dur_plan, </span>
+<span id="cb5-27"><a href="#cb5-27" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">600</span> </span>
+<span id="cb5-28"><a href="#cb5-28" tabindex="-1"></a>)</span>
+<span id="cb5-29"><a href="#cb5-29" tabindex="-1"></a></span>
+<span id="cb5-30"><a href="#cb5-30" tabindex="-1"></a><span class="co"># Limit to planned enrollment for the initial cut</span></span>
+<span id="cb5-31"><a href="#cb5-31" tabindex="-1"></a><span class="co"># We will &quot;open&quot; more enrollment if needed</span></span>
+<span id="cb5-32"><a href="#cb5-32" tabindex="-1"></a>sim_data_planned <span class="ot">&lt;-</span> sim_data[<span class="dv">1</span><span class="sc">:</span><span class="fu">ceiling</span>(design_plan<span class="sc">$</span>n_total), ]</span></code></pre></div>
+</div>
+<div id="interim-analysis" class="section level2">
+<h2>Interim analysis</h2>
+<p>We perform an interim analysis at <strong>Month 10</strong>, which is
+2 months prior to the end of planned enrollment (Month 12).</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>interim_time <span class="ot">&lt;-</span> <span class="dv">10</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>interim_data <span class="ot">&lt;-</span> <span class="fu">cut_data_by_date</span>(sim_data_planned, <span class="at">cut_date =</span> interim_time)</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co"># Summary</span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="fu">table</span>(interim_data<span class="sc">$</span>treatment)</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co">#&gt;      Control Experimental </span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt;           99           98</span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="fu">sum</span>(interim_data<span class="sc">$</span>events)</span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt; [1] 69</span></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="fu">mean</span>(interim_data<span class="sc">$</span>tte)</span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co">#&gt; [1] 5.086404</span></span></code></pre></div>
+<div id="information-computation" class="section level3">
+<h3>Information computation</h3>
+<p>We calculate the statistical information accumulated so far.</p>
+<p><strong>Blinded Information:</strong> Calculated assuming a common
+rate and dispersion, often used for monitoring without unblinding.</p>
+<p><strong>Unblinded Information:</strong> Calculated using the observed
+rates and dispersion in each group. This is the true Fisher information
+for the log rate ratio.</p>
+<p><span class="math display">\[ \mathcal{I} = \left(
+\frac{1}{\text{Var}(\hat{\beta}_{trt})} \right) \]</span></p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co"># Blinded SSR</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>blinded_res <span class="ot">&lt;-</span> <span class="fu">blinded_ssr</span>(</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="at">data =</span> interim_data,</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="at">ratio =</span> <span class="dv">1</span>,</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>  <span class="at">lambda1_planning =</span> lambda1_plan,</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>  <span class="at">lambda2_planning =</span> lambda2_plan,</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>  <span class="at">power =</span> power_plan,</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>  <span class="at">alpha =</span> alpha_plan,</span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>  <span class="at">accrual_rate =</span> accrual_rate_plan,</span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>  <span class="at">accrual_duration =</span> accrual_dur_plan,</span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>  <span class="at">trial_duration =</span> trial_dur_plan</span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a>)</span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="co"># Unblinded SSR</span></span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a>ssr_res <span class="ot">&lt;-</span> <span class="fu">unblinded_ssr</span>(</span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a>  <span class="at">data =</span> interim_data,</span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a>  <span class="at">ratio =</span> <span class="dv">1</span>,</span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a>  <span class="at">lambda1_planning =</span> lambda1_plan,</span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a>  <span class="at">lambda2_planning =</span> lambda2_plan,</span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a>  <span class="at">power =</span> power_plan,</span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a>  <span class="at">alpha =</span> alpha_plan,</span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a>  <span class="at">accrual_rate =</span> accrual_rate_plan,</span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a>  <span class="at">accrual_duration =</span> accrual_dur_plan,</span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a>  <span class="at">trial_duration =</span> trial_dur_plan</span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a>)</span>
+<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a></span>
+<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Blinded SSR N:&quot;</span>, <span class="fu">ceiling</span>(blinded_res<span class="sc">$</span>n_total_blinded), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a><span class="co">#&gt; Blinded SSR N: 914</span></span>
+<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Unblinded SSR N:&quot;</span>, <span class="fu">ceiling</span>(ssr_res<span class="sc">$</span>n_total_unblinded), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a><span class="co">#&gt; Unblinded SSR N: 888</span></span>
+<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a><span class="fu">print</span>(ssr_res)</span>
+<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a><span class="co">#&gt; $n_total_unblinded</span></span>
+<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a><span class="co">#&gt; (Intercept) </span></span>
+<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a><span class="co">#&gt;         888 </span></span>
+<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a><span class="co">#&gt; $dispersion_unblinded</span></span>
+<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a><span class="co">#&gt; [1] 0.8891071</span></span>
+<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-39"><a href="#cb7-39" tabindex="-1"></a><span class="co">#&gt; $lambda1_unblinded</span></span>
+<span id="cb7-40"><a href="#cb7-40" tabindex="-1"></a><span class="co">#&gt; (Intercept) </span></span>
+<span id="cb7-41"><a href="#cb7-41" tabindex="-1"></a><span class="co">#&gt;  0.07878905 </span></span>
+<span id="cb7-42"><a href="#cb7-42" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-43"><a href="#cb7-43" tabindex="-1"></a><span class="co">#&gt; $lambda2_unblinded</span></span>
+<span id="cb7-44"><a href="#cb7-44" tabindex="-1"></a><span class="co">#&gt; (Intercept) </span></span>
+<span id="cb7-45"><a href="#cb7-45" tabindex="-1"></a><span class="co">#&gt;  0.05726336 </span></span>
+<span id="cb7-46"><a href="#cb7-46" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-47"><a href="#cb7-47" tabindex="-1"></a><span class="co">#&gt; $info_fraction</span></span>
+<span id="cb7-48"><a href="#cb7-48" tabindex="-1"></a><span class="co">#&gt; [1] 0.0950141</span></span>
+<span id="cb7-49"><a href="#cb7-49" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-50"><a href="#cb7-50" tabindex="-1"></a><span class="co">#&gt; $unblinded_info</span></span>
+<span id="cb7-51"><a href="#cb7-51" tabindex="-1"></a><span class="co">#&gt; [1] 12.06309</span></span>
+<span id="cb7-52"><a href="#cb7-52" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-53"><a href="#cb7-53" tabindex="-1"></a><span class="co">#&gt; $target_info</span></span>
+<span id="cb7-54"><a href="#cb7-54" tabindex="-1"></a><span class="co">#&gt; [1] 126.9611</span></span></code></pre></div>
+<p>The estimated control rate is 0.079, which is lower than the planned
+0.1. The information fraction is 0.095.</p>
+</div>
+<div id="sample-size-re-estimation" class="section level3">
+<h3>Sample size re-estimation</h3>
+<p>Since the control rate is lower and dispersion is higher, the
+information accumulates slower than planned. To maintain power, we need
+to increase the sample size or follow-up.</p>
+<p>The <code>unblinded_ssr</code> function estimates the required total
+sample size to be 888. We ensure the sample size is at least as large as
+the planned sample size.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>n_planned <span class="ot">&lt;-</span> <span class="fu">ceiling</span>(design_plan<span class="sc">$</span>n_total)</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>n_estimated <span class="ot">&lt;-</span> <span class="fu">ceiling</span>(ssr_res<span class="sc">$</span>n_total_unblinded)</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a><span class="co"># Ensure we don&#39;t decrease sample size</span></span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>n_final <span class="ot">&lt;-</span> <span class="fu">max</span>(n_planned, n_estimated)</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a><span class="cf">if</span> (n_final <span class="sc">&gt;</span> n_planned) {</span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">&quot;Increasing sample size from&quot;</span>, n_planned, <span class="st">&quot;to&quot;</span>, n_final, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>  </span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>  <span class="co"># Calculate new durations based on constant accrual rate</span></span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a>  <span class="co"># We extend enrollment to reach the new target N</span></span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a>  new_accrual_dur <span class="ot">&lt;-</span> n_final <span class="sc">/</span> accrual_rate_plan</span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a>  </span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a>  <span class="co"># We maintain the planned max follow-up of 12 months</span></span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a>  <span class="co"># So the trial duration extends by the same amount as the accrual duration</span></span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a>  new_trial_dur <span class="ot">&lt;-</span> new_accrual_dur <span class="sc">+</span> <span class="dv">12</span> </span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a>  </span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">&quot;New Accrual Duration:&quot;</span>, <span class="fu">round</span>(new_accrual_dur, <span class="dv">2</span>), <span class="st">&quot;months</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">&quot;New Trial Duration:&quot;</span>, <span class="fu">round</span>(new_trial_dur, <span class="dv">2</span>), <span class="st">&quot;months</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">&quot;No sample size increase needed.</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a>  new_accrual_dur <span class="ot">&lt;-</span> accrual_dur_plan</span>
+<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a>  new_trial_dur <span class="ot">&lt;-</span> trial_dur_plan</span>
+<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a>  n_final <span class="ot">&lt;-</span> n_planned</span>
+<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a>}</span>
+<span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a><span class="co">#&gt; Increasing sample size from 748 to 888 </span></span>
+<span id="cb8-27"><a href="#cb8-27" tabindex="-1"></a><span class="co">#&gt; New Accrual Duration: 44.4 months</span></span>
+<span id="cb8-28"><a href="#cb8-28" tabindex="-1"></a><span class="co">#&gt; New Trial Duration: 56.4 months</span></span></code></pre></div>
+</div>
+</div>
+<div id="final-analysis" class="section level2">
+<h2>Final analysis</h2>
+<p>We proceed to the final analysis at Month 56.4. We include the
+additional patients if the sample size was increased.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="co"># Update the dataset to include the additional patients</span></span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>sim_data_final <span class="ot">&lt;-</span> sim_data[<span class="dv">1</span><span class="sc">:</span>n_final, ]</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="co"># Cut at final analysis time</span></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>final_data <span class="ot">&lt;-</span> <span class="fu">cut_data_by_date</span>(sim_data_final, <span class="at">cut_date =</span> new_trial_dur)</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a><span class="co"># Average exposure</span></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a><span class="fu">mean</span>(final_data<span class="sc">$</span>tte)</span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a><span class="co">#&gt; [1] 23.95368</span></span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a><span class="co"># Fit final model</span></span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a>fit_final <span class="ot">&lt;-</span> <span class="fu">glm.nb</span>(events <span class="sc">~</span> treatment <span class="sc">+</span> <span class="fu">offset</span>(<span class="fu">log</span>(tte)), <span class="at">data =</span> final_data)</span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a><span class="fu">summary</span>(fit_final)</span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a><span class="co">#&gt; Call:</span></span>
+<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a><span class="co">#&gt; glm.nb(formula = events ~ treatment + offset(log(tte)), data = final_data, </span></span>
+<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a><span class="co">#&gt;     init.theta = 1.782870921, link = log)</span></span>
+<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a><span class="co">#&gt; Coefficients:</span></span>
+<span id="cb9-20"><a href="#cb9-20" tabindex="-1"></a><span class="co">#&gt;                       Estimate Std. Error z value Pr(&gt;|z|)    </span></span>
+<span id="cb9-21"><a href="#cb9-21" tabindex="-1"></a><span class="co">#&gt; (Intercept)           -2.58248    0.08222 -31.411   &lt;2e-16 ***</span></span>
+<span id="cb9-22"><a href="#cb9-22" tabindex="-1"></a><span class="co">#&gt; treatmentExperimental -0.14688    0.11826  -1.242    0.214    </span></span>
+<span id="cb9-23"><a href="#cb9-23" tabindex="-1"></a><span class="co">#&gt; ---</span></span>
+<span id="cb9-24"><a href="#cb9-24" tabindex="-1"></a><span class="co">#&gt; Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</span></span>
+<span id="cb9-25"><a href="#cb9-25" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb9-26"><a href="#cb9-26" tabindex="-1"></a><span class="co">#&gt; (Dispersion parameter for Negative Binomial(1.7829) family taken to be 1)</span></span>
+<span id="cb9-27"><a href="#cb9-27" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb9-28"><a href="#cb9-28" tabindex="-1"></a><span class="co">#&gt;     Null deviance: 364.75  on 330  degrees of freedom</span></span>
+<span id="cb9-29"><a href="#cb9-29" tabindex="-1"></a><span class="co">#&gt; Residual deviance: 363.20  on 329  degrees of freedom</span></span>
+<span id="cb9-30"><a href="#cb9-30" tabindex="-1"></a><span class="co">#&gt; AIC: 1166</span></span>
+<span id="cb9-31"><a href="#cb9-31" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb9-32"><a href="#cb9-32" tabindex="-1"></a><span class="co">#&gt; Number of Fisher Scoring iterations: 1</span></span>
+<span id="cb9-33"><a href="#cb9-33" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb9-34"><a href="#cb9-34" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb9-35"><a href="#cb9-35" tabindex="-1"></a><span class="co">#&gt;               Theta:  1.783 </span></span>
+<span id="cb9-36"><a href="#cb9-36" tabindex="-1"></a><span class="co">#&gt;           Std. Err.:  0.316 </span></span>
+<span id="cb9-37"><a href="#cb9-37" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb9-38"><a href="#cb9-38" tabindex="-1"></a><span class="co">#&gt;  2 x log-likelihood:  -1159.959</span></span>
+<span id="cb9-39"><a href="#cb9-39" tabindex="-1"></a></span>
+<span id="cb9-40"><a href="#cb9-40" tabindex="-1"></a><span class="co"># Calculate final information</span></span>
+<span id="cb9-41"><a href="#cb9-41" tabindex="-1"></a>var_beta <span class="ot">&lt;-</span> <span class="fu">vcov</span>(fit_final)[<span class="dv">2</span>, <span class="dv">2</span>]</span>
+<span id="cb9-42"><a href="#cb9-42" tabindex="-1"></a>final_info <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">/</span> var_beta</span>
+<span id="cb9-43"><a href="#cb9-43" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Final Information:&quot;</span>, final_info, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb9-44"><a href="#cb9-44" tabindex="-1"></a><span class="co">#&gt; Final Information: 71.50829</span></span>
+<span id="cb9-45"><a href="#cb9-45" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Target Information:&quot;</span>, ssr_res<span class="sc">$</span>target_info, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb9-46"><a href="#cb9-46" tabindex="-1"></a><span class="co">#&gt; Target Information: 126.9611</span></span></code></pre></div>
+<div id="updating-bounds" class="section level3">
+<h3>Updating bounds</h3>
+<p>If the final information differs from the target (e.g., it is lower),
+we need to adjust the critical values to ensure we spend exactly <span class="math inline">\(\alpha\)</span>. We use the <code>gsDesign</code>
+package with <code>usTime</code> (user-specified information fraction)
+to update the bounds.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="co"># Information fraction at final analysis</span></span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a><span class="co"># If final_info &lt; target_info, fraction &lt; 1. </span></span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a><span class="co"># However, for the final analysis, we typically want to spend all remaining alpha.</span></span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a><span class="co"># We can treat the current info as the &quot;maximum&quot; info for the spending function.</span></span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a><span class="co"># Example group sequential design (O&#39;Brien-Fleming spending)</span></span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a><span class="co"># We assume the interim was at the observed information fraction</span></span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a>info_fractions <span class="ot">&lt;-</span> <span class="fu">c</span>(ssr_res<span class="sc">$</span>info_fraction, final_info <span class="sc">/</span> ssr_res<span class="sc">$</span>target_info)</span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a><span class="co"># If final fraction &lt; 1, we can force it to 1 to spend all alpha, </span></span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a><span class="co"># effectively accepting the lower power.</span></span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a><span class="co"># Or we can use the actual information fractions in a spending function approach.</span></span>
+<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a></span>
+<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a><span class="co"># Let&#39;s assume we want to spend all alpha at the final analysis regardless of info.</span></span>
+<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a><span class="co"># We set the final timing to 1.</span></span>
+<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a>info_fractions_spending <span class="ot">&lt;-</span> <span class="fu">c</span>(ssr_res<span class="sc">$</span>info_fraction, <span class="dv">1</span>)</span>
+<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a></span>
+<span id="cb10-18"><a href="#cb10-18" tabindex="-1"></a><span class="co"># Update bounds</span></span>
+<span id="cb10-19"><a href="#cb10-19" tabindex="-1"></a>gs_update <span class="ot">&lt;-</span> <span class="fu">gsDesign</span>(</span>
+<span id="cb10-20"><a href="#cb10-20" tabindex="-1"></a>  <span class="at">k =</span> <span class="dv">2</span>,</span>
+<span id="cb10-21"><a href="#cb10-21" tabindex="-1"></a>  <span class="at">test.type =</span> <span class="dv">1</span>,</span>
+<span id="cb10-22"><a href="#cb10-22" tabindex="-1"></a>  <span class="at">alpha =</span> alpha_plan,</span>
+<span id="cb10-23"><a href="#cb10-23" tabindex="-1"></a>  <span class="at">sfu =</span> sfLDOF,</span>
+<span id="cb10-24"><a href="#cb10-24" tabindex="-1"></a>  <span class="at">usTime =</span> info_fractions_spending,</span>
+<span id="cb10-25"><a href="#cb10-25" tabindex="-1"></a>  <span class="at">n.I =</span> <span class="fu">c</span>(ssr_res<span class="sc">$</span>unblinded_info, final_info)</span>
+<span id="cb10-26"><a href="#cb10-26" tabindex="-1"></a>)</span>
+<span id="cb10-27"><a href="#cb10-27" tabindex="-1"></a></span>
+<span id="cb10-28"><a href="#cb10-28" tabindex="-1"></a><span class="fu">gsBoundSummary</span>(gs_update,</span>
+<span id="cb10-29"><a href="#cb10-29" tabindex="-1"></a>    <span class="at">deltaname =</span> <span class="st">&quot;RR&quot;</span>,</span>
+<span id="cb10-30"><a href="#cb10-30" tabindex="-1"></a>    <span class="at">logdelta =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb10-31"><a href="#cb10-31" tabindex="-1"></a>    <span class="at">Nname =</span> <span class="st">&quot;Information&quot;</span>,</span>
+<span id="cb10-32"><a href="#cb10-32" tabindex="-1"></a>    <span class="at">timename =</span> <span class="st">&quot;Month&quot;</span>,</span>
+<span id="cb10-33"><a href="#cb10-33" tabindex="-1"></a>    <span class="at">digits =</span> <span class="dv">4</span>,</span>
+<span id="cb10-34"><a href="#cb10-34" tabindex="-1"></a>    <span class="at">ddigits =</span> <span class="dv">2</span>) <span class="sc">|&gt;</span> <span class="fu">gt</span>() <span class="sc">|&gt;</span></span>
+<span id="cb10-35"><a href="#cb10-35" tabindex="-1"></a>  <span class="fu">tab_header</span>(</span>
+<span id="cb10-36"><a href="#cb10-36" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">&quot;Updated Group Sequential Design Bounds&quot;</span>,</span>
+<span id="cb10-37"><a href="#cb10-37" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="fu">paste0</span>(</span>
+<span id="cb10-38"><a href="#cb10-38" tabindex="-1"></a>      <span class="st">&quot;Final Information = &quot;</span>, <span class="fu">round</span>(final_info, <span class="dv">2</span>)</span>
+<span id="cb10-39"><a href="#cb10-39" tabindex="-1"></a>    )</span>
+<span id="cb10-40"><a href="#cb10-40" tabindex="-1"></a>  )</span></code></pre></div>
+<div id="akjkbwjige" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#akjkbwjige table {
+font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+-webkit-font-smoothing: antialiased;
+-moz-osx-font-smoothing: grayscale;
+}
+#akjkbwjige thead, #akjkbwjige tbody, #akjkbwjige tfoot, #akjkbwjige tr, #akjkbwjige td, #akjkbwjige th {
+border-style: none;
+}
+#akjkbwjige p {
+margin: 0;
+padding: 0;
+}
+#akjkbwjige .gt_table {
+display: table;
+border-collapse: collapse;
+line-height: normal;
+margin-left: auto;
+margin-right: auto;
+color: #333333;
+font-size: 16px;
+font-weight: normal;
+font-style: normal;
+background-color: #FFFFFF;
+width: auto;
+border-top-style: solid;
+border-top-width: 2px;
+border-top-color: #A8A8A8;
+border-right-style: none;
+border-right-width: 2px;
+border-right-color: #D3D3D3;
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #A8A8A8;
+border-left-style: none;
+border-left-width: 2px;
+border-left-color: #D3D3D3;
+}
+#akjkbwjige .gt_caption {
+padding-top: 4px;
+padding-bottom: 4px;
+}
+#akjkbwjige .gt_title {
+color: #333333;
+font-size: 125%;
+font-weight: initial;
+padding-top: 4px;
+padding-bottom: 4px;
+padding-left: 5px;
+padding-right: 5px;
+border-bottom-color: #FFFFFF;
+border-bottom-width: 0;
+}
+#akjkbwjige .gt_subtitle {
+color: #333333;
+font-size: 85%;
+font-weight: initial;
+padding-top: 3px;
+padding-bottom: 5px;
+padding-left: 5px;
+padding-right: 5px;
+border-top-color: #FFFFFF;
+border-top-width: 0;
+}
+#akjkbwjige .gt_heading {
+background-color: #FFFFFF;
+text-align: center;
+border-bottom-color: #FFFFFF;
+border-left-style: none;
+border-left-width: 1px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 1px;
+border-right-color: #D3D3D3;
+}
+#akjkbwjige .gt_bottom_border {
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+}
+#akjkbwjige .gt_col_headings {
+border-top-style: solid;
+border-top-width: 2px;
+border-top-color: #D3D3D3;
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+border-left-style: none;
+border-left-width: 1px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 1px;
+border-right-color: #D3D3D3;
+}
+#akjkbwjige .gt_col_heading {
+color: #333333;
+background-color: #FFFFFF;
+font-size: 100%;
+font-weight: normal;
+text-transform: inherit;
+border-left-style: none;
+border-left-width: 1px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 1px;
+border-right-color: #D3D3D3;
+vertical-align: bottom;
+padding-top: 5px;
+padding-bottom: 6px;
+padding-left: 5px;
+padding-right: 5px;
+overflow-x: hidden;
+}
+#akjkbwjige .gt_column_spanner_outer {
+color: #333333;
+background-color: #FFFFFF;
+font-size: 100%;
+font-weight: normal;
+text-transform: inherit;
+padding-top: 0;
+padding-bottom: 0;
+padding-left: 4px;
+padding-right: 4px;
+}
+#akjkbwjige .gt_column_spanner_outer:first-child {
+padding-left: 0;
+}
+#akjkbwjige .gt_column_spanner_outer:last-child {
+padding-right: 0;
+}
+#akjkbwjige .gt_column_spanner {
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+vertical-align: bottom;
+padding-top: 5px;
+padding-bottom: 5px;
+overflow-x: hidden;
+display: inline-block;
+width: 100%;
+}
+#akjkbwjige .gt_spanner_row {
+border-bottom-style: hidden;
+}
+#akjkbwjige .gt_group_heading {
+padding-top: 8px;
+padding-bottom: 8px;
+padding-left: 5px;
+padding-right: 5px;
+color: #333333;
+background-color: #FFFFFF;
+font-size: 100%;
+font-weight: initial;
+text-transform: inherit;
+border-top-style: solid;
+border-top-width: 2px;
+border-top-color: #D3D3D3;
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+border-left-style: none;
+border-left-width: 1px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 1px;
+border-right-color: #D3D3D3;
+vertical-align: middle;
+text-align: left;
+}
+#akjkbwjige .gt_empty_group_heading {
+padding: 0.5px;
+color: #333333;
+background-color: #FFFFFF;
+font-size: 100%;
+font-weight: initial;
+border-top-style: solid;
+border-top-width: 2px;
+border-top-color: #D3D3D3;
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+vertical-align: middle;
+}
+#akjkbwjige .gt_from_md > :first-child {
+margin-top: 0;
+}
+#akjkbwjige .gt_from_md > :last-child {
+margin-bottom: 0;
+}
+#akjkbwjige .gt_row {
+padding-top: 8px;
+padding-bottom: 8px;
+padding-left: 5px;
+padding-right: 5px;
+margin: 10px;
+border-top-style: solid;
+border-top-width: 1px;
+border-top-color: #D3D3D3;
+border-left-style: none;
+border-left-width: 1px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 1px;
+border-right-color: #D3D3D3;
+vertical-align: middle;
+overflow-x: hidden;
+}
+#akjkbwjige .gt_stub {
+color: #333333;
+background-color: #FFFFFF;
+font-size: 100%;
+font-weight: initial;
+text-transform: inherit;
+border-right-style: solid;
+border-right-width: 2px;
+border-right-color: #D3D3D3;
+padding-left: 5px;
+padding-right: 5px;
+}
+#akjkbwjige .gt_stub_row_group {
+color: #333333;
+background-color: #FFFFFF;
+font-size: 100%;
+font-weight: initial;
+text-transform: inherit;
+border-right-style: solid;
+border-right-width: 2px;
+border-right-color: #D3D3D3;
+padding-left: 5px;
+padding-right: 5px;
+vertical-align: top;
+}
+#akjkbwjige .gt_row_group_first td {
+border-top-width: 2px;
+}
+#akjkbwjige .gt_row_group_first th {
+border-top-width: 2px;
+}
+#akjkbwjige .gt_summary_row {
+color: #333333;
+background-color: #FFFFFF;
+text-transform: inherit;
+padding-top: 8px;
+padding-bottom: 8px;
+padding-left: 5px;
+padding-right: 5px;
+}
+#akjkbwjige .gt_first_summary_row {
+border-top-style: solid;
+border-top-color: #D3D3D3;
+}
+#akjkbwjige .gt_first_summary_row.thick {
+border-top-width: 2px;
+}
+#akjkbwjige .gt_last_summary_row {
+padding-top: 8px;
+padding-bottom: 8px;
+padding-left: 5px;
+padding-right: 5px;
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+}
+#akjkbwjige .gt_grand_summary_row {
+color: #333333;
+background-color: #FFFFFF;
+text-transform: inherit;
+padding-top: 8px;
+padding-bottom: 8px;
+padding-left: 5px;
+padding-right: 5px;
+}
+#akjkbwjige .gt_first_grand_summary_row {
+padding-top: 8px;
+padding-bottom: 8px;
+padding-left: 5px;
+padding-right: 5px;
+border-top-style: double;
+border-top-width: 6px;
+border-top-color: #D3D3D3;
+}
+#akjkbwjige .gt_last_grand_summary_row_top {
+padding-top: 8px;
+padding-bottom: 8px;
+padding-left: 5px;
+padding-right: 5px;
+border-bottom-style: double;
+border-bottom-width: 6px;
+border-bottom-color: #D3D3D3;
+}
+#akjkbwjige .gt_striped {
+background-color: rgba(128, 128, 128, 0.05);
+}
+#akjkbwjige .gt_table_body {
+border-top-style: solid;
+border-top-width: 2px;
+border-top-color: #D3D3D3;
+border-bottom-style: solid;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+}
+#akjkbwjige .gt_footnotes {
+color: #333333;
+background-color: #FFFFFF;
+border-bottom-style: none;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+border-left-style: none;
+border-left-width: 2px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 2px;
+border-right-color: #D3D3D3;
+}
+#akjkbwjige .gt_footnote {
+margin: 0px;
+font-size: 90%;
+padding-top: 4px;
+padding-bottom: 4px;
+padding-left: 5px;
+padding-right: 5px;
+}
+#akjkbwjige .gt_sourcenotes {
+color: #333333;
+background-color: #FFFFFF;
+border-bottom-style: none;
+border-bottom-width: 2px;
+border-bottom-color: #D3D3D3;
+border-left-style: none;
+border-left-width: 2px;
+border-left-color: #D3D3D3;
+border-right-style: none;
+border-right-width: 2px;
+border-right-color: #D3D3D3;
+}
+#akjkbwjige .gt_sourcenote {
+font-size: 90%;
+padding-top: 4px;
+padding-bottom: 4px;
+padding-left: 5px;
+padding-right: 5px;
+}
+#akjkbwjige .gt_left {
+text-align: left;
+}
+#akjkbwjige .gt_center {
+text-align: center;
+}
+#akjkbwjige .gt_right {
+text-align: right;
+font-variant-numeric: tabular-nums;
+}
+#akjkbwjige .gt_font_normal {
+font-weight: normal;
+}
+#akjkbwjige .gt_font_bold {
+font-weight: bold;
+}
+#akjkbwjige .gt_font_italic {
+font-style: italic;
+}
+#akjkbwjige .gt_super {
+font-size: 65%;
+}
+#akjkbwjige .gt_footnote_marks {
+font-size: 75%;
+vertical-align: 0.4em;
+position: initial;
+}
+#akjkbwjige .gt_asterisk {
+font-size: 100%;
+vertical-align: 0;
+}
+#akjkbwjige .gt_indent_1 {
+text-indent: 5px;
+}
+#akjkbwjige .gt_indent_2 {
+text-indent: 10px;
+}
+#akjkbwjige .gt_indent_3 {
+text-indent: 15px;
+}
+#akjkbwjige .gt_indent_4 {
+text-indent: 20px;
+}
+#akjkbwjige .gt_indent_5 {
+text-indent: 25px;
+}
+#akjkbwjige .katex-display {
+display: inline-flex !important;
+margin-bottom: 0.75em !important;
+}
+#akjkbwjige div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+height: 0px !important;
+}
+</style>
+<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+  <thead>
+    <tr class="gt_heading">
+      <td colspan="3" class="gt_heading gt_title gt_font_normal" style>Updated Group Sequential Design Bounds</td>
+    </tr>
+    <tr class="gt_heading">
+      <td colspan="3" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border" style>Final Information = 71.51</td>
+    </tr>
+    <tr class="gt_col_headings">
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="Analysis">Analysis</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="Value">Value</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="Efficacy">Efficacy</th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr><td headers="Analysis" class="gt_row gt_left">IA 1: 17%</td>
+<td headers="Value" class="gt_row gt_left">Z</td>
+<td headers="Efficacy" class="gt_row gt_right">7.1773</td></tr>
+    <tr><td headers="Analysis" class="gt_row gt_left">Information: 12.06</td>
+<td headers="Value" class="gt_row gt_left">p (1-sided)</td>
+<td headers="Efficacy" class="gt_row gt_right">0.0000</td></tr>
+    <tr><td headers="Analysis" class="gt_row gt_left"></td>
+<td headers="Value" class="gt_row gt_left">~RR at bound</td>
+<td headers="Efficacy" class="gt_row gt_right">1.8918</td></tr>
+    <tr><td headers="Analysis" class="gt_row gt_left"></td>
+<td headers="Value" class="gt_row gt_left">P(Cross) if RR=1</td>
+<td headers="Efficacy" class="gt_row gt_right">0.0000</td></tr>
+    <tr><td headers="Analysis" class="gt_row gt_left"></td>
+<td headers="Value" class="gt_row gt_left">P(Cross) if RR=2.72</td>
+<td headers="Efficacy" class="gt_row gt_right">1.0000</td></tr>
+    <tr><td headers="Analysis" class="gt_row gt_left">Final</td>
+<td headers="Value" class="gt_row gt_left">Z</td>
+<td headers="Efficacy" class="gt_row gt_right">1.9600</td></tr>
+    <tr><td headers="Analysis" class="gt_row gt_left">Information: 71.51</td>
+<td headers="Value" class="gt_row gt_left">p (1-sided)</td>
+<td headers="Efficacy" class="gt_row gt_right">0.0250</td></tr>
+    <tr><td headers="Analysis" class="gt_row gt_left"></td>
+<td headers="Value" class="gt_row gt_left">~RR at bound</td>
+<td headers="Efficacy" class="gt_row gt_right">1.0741</td></tr>
+    <tr><td headers="Analysis" class="gt_row gt_left"></td>
+<td headers="Value" class="gt_row gt_left">P(Cross) if RR=1</td>
+<td headers="Efficacy" class="gt_row gt_right">0.0250</td></tr>
+    <tr><td headers="Analysis" class="gt_row gt_left"></td>
+<td headers="Value" class="gt_row gt_left">P(Cross) if RR=2.72</td>
+<td headers="Efficacy" class="gt_row gt_right">1.0000</td></tr>
+  </tbody>
+  
+</table>
+</div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a></span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a><span class="co"># Test statistic</span></span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>z_score <span class="ot">&lt;-</span> <span class="fu">coef</span>(fit_final)[<span class="st">&quot;treatmentExperimental&quot;</span>] <span class="sc">/</span> <span class="fu">sqrt</span>(var_beta)</span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a><span class="co"># Note: gsDesign assumes Z &gt; 0 for efficacy. </span></span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a><span class="co"># Our model gives log(RR) &lt; 0 for efficacy.</span></span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a><span class="co"># So Z_stat = - (log(RR)) / SE</span></span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>z_stat <span class="ot">&lt;-</span> <span class="sc">-</span><span class="fu">coef</span>(fit_final)[<span class="st">&quot;treatmentExperimental&quot;</span>] <span class="sc">/</span> <span class="fu">sqrt</span>(var_beta)</span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a></span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Z-statistic:&quot;</span>, z_stat, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a><span class="co">#&gt; Z-statistic: 1.24208</span></span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Final Bound:&quot;</span>, gs_update<span class="sc">$</span>upper<span class="sc">$</span>bound[<span class="dv">2</span>], <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a><span class="co">#&gt; Final Bound: 1.959964</span></span>
+<span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a></span>
+<span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a><span class="cf">if</span> (z_stat <span class="sc">&gt;</span> gs_update<span class="sc">$</span>upper<span class="sc">$</span>bound[<span class="dv">2</span>]) {</span>
+<span id="cb11-15"><a href="#cb11-15" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">&quot;Reject Null Hypothesis</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb11-16"><a href="#cb11-16" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb11-17"><a href="#cb11-17" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">&quot;Fail to Reject Null Hypothesis</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb11-18"><a href="#cb11-18" tabindex="-1"></a>}</span>
+<span id="cb11-19"><a href="#cb11-19" tabindex="-1"></a><span class="co">#&gt; Fail to Reject Null Hypothesis</span></span></code></pre></div>
+</div>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

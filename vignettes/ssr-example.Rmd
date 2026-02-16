@@ -1,0 +1,340 @@
+---
+title: "Sample size re-estimation example"
+output: rmarkdown::html_vignette
+bibliography: gsDesignNB.bib
+vignette: >
+  %\VignetteIndexEntry{Sample size re-estimation example}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r, message=FALSE, warning=FALSE}
+library(gsDesignNB)
+library(gsDesign)
+library(data.table)
+library(MASS)
+library(gt)
+library(gt)
+```
+
+## Introduction
+
+This vignette demonstrates a group sequential trial with a single interim analysis where unblinded sample size re-estimation (SSR) is performed. 
+
+We simulate a scenario where the **control event rate is lower than assumed** and the **dispersion is higher than assumed**. Both factors lead to slower information accumulation (or higher variance) than planned. We will show how to:
+
+1.  Monitor information accumulation at an interim analysis.
+2.  Re-estimate the required sample size (or duration) to achieve the target power.
+3.  Adjust the final analysis bounds if the final information differs from the plan.
+
+## Trial setup and initial design
+
+**Planned parameters:**
+
+*   Control rate ($\lambda_1$): 0.1 events/month
+*   Experimental rate ($\lambda_2$): 0.075 events/month (Hazard Ratio = 0.75)
+*   Dispersion ($k$): 0.5
+*   Power: 90%
+*   One-sided Type I error ($\alpha$): 0.025
+*   Enrollment: 20 patients/month for 12 months (Total N = 240)
+*   Study duration: 24 months
+
+**Actual parameters (simulation truth):**
+
+*   Control rate ($\lambda_1$): 0.08 events/month (Lower than planned)
+*   Experimental rate ($\lambda_2$): 0.06 events/month (HR = 0.75 maintained)
+*   Dispersion ($k$): 0.65 (Higher than planned)
+
+### Initial sample size calculation
+
+```{r initial_design}
+# Planned parameters
+lambda1_plan <- 0.1
+lambda2_plan <- 0.075
+k_plan <- 0.5
+power_plan <- 0.9
+alpha_plan <- 0.025
+accrual_rate_plan <- 20
+accrual_dur_plan <- 12
+trial_dur_plan <- 24
+
+# Calculate sample size
+design_plan <- sample_size_nbinom(
+  lambda1 = lambda1_plan,
+  lambda2 = lambda2_plan,
+  dispersion = k_plan,
+  power = power_plan,
+  alpha = alpha_plan,
+  accrual_rate = accrual_rate_plan,
+  accrual_duration = accrual_dur_plan,
+  trial_duration = trial_dur_plan,
+  max_followup = 12
+)
+
+# Convert to group sequential design
+gs_plan <- design_plan |> 
+   gsNBCalendar(
+     k = 2,
+     test.type = 4, # Non-binding futility
+     alpha = alpha_plan,
+     sfu = sfHSD,
+     sfupar = -2, # Moderately aggressive alpha-spending
+     sfl = sfHSD,
+     sflpar = 1, # Pocock-like futility spending
+     analysis_times = c(accrual_dur_plan - 2, trial_dur_plan)
+   ) |> gsDesignNB::toInteger() # Round to integer sample size
+
+```
+
+```{r}
+summary(gs_plan)
+```
+
+```{r}
+gsBoundSummary(gs_plan,
+    deltaname = "RR",
+    logdelta = TRUE,
+    Nname = "Information",
+    timename = "Month",
+    digits = 4,
+    ddigits = 2) |> gt() |>
+  tab_header(
+    title = "Group Sequential Design Bounds for Negative Binomial Outcome",
+    subtitle = paste0(
+      "N = ", ceiling(gs_plan$n_total[gs_plan$k]),
+      ", Expected events = ", round(gs_plan$nb_design$total_events, 1)
+    )
+  )
+```
+## Simulation
+
+We simulate the trial with the same rate ratio, but lower actual rates and a higher dispersion.
+We will limit the maximum sample size to 40% more than the planned size (i.e., max N = ) to avoid unbounded increases.
+
+```{r simulation}
+set.seed(1234)
+
+# Actual parameters
+lambda1_true <- 0.08 # Lower event rates, same rr
+lambda2_true <- 0.06
+k_true <- 0.65 # Higher dispersion
+
+# Enrollment and rates for simulation
+# We simulate a larger pool to allow for potential sample size increase
+enroll_rate <- data.frame(rate = accrual_rate_plan, duration = accrual_dur_plan * 2) 
+fail_rate <- data.frame(
+  treatment = c("Control", "Experimental"),
+  rate = c(lambda1_true, lambda2_true),
+  dispersion = k_true
+)
+dropout_rate <- data.frame(
+  treatment = c("Control", "Experimental"),
+  rate = c(0, 0),
+  duration = c(100, 100)
+)
+
+sim_data <- nb_sim(
+  enroll_rate = enroll_rate,
+  fail_rate = fail_rate,
+  dropout_rate = dropout_rate,
+  max_followup = trial_dur_plan, 
+  n = 600 
+)
+
+# Limit to planned enrollment for the initial cut
+# We will "open" more enrollment if needed
+sim_data_planned <- sim_data[1:ceiling(design_plan$n_total), ]
+```
+
+## Interim analysis
+
+We perform an interim analysis at **Month 10**, which is 2 months prior to the end of planned enrollment (Month 12).
+
+```{r interim_cut}
+interim_time <- 10
+interim_data <- cut_data_by_date(sim_data_planned, cut_date = interim_time)
+
+# Summary
+table(interim_data$treatment)
+sum(interim_data$events)
+mean(interim_data$tte)
+```
+
+### Information computation
+
+We calculate the statistical information accumulated so far.
+
+**Blinded Information:**
+Calculated assuming a common rate and dispersion, often used for monitoring without unblinding.
+
+**Unblinded Information:**
+Calculated using the observed rates and dispersion in each group. This is the true Fisher information for the log rate ratio.
+
+$$ \mathcal{I} = \left( \frac{1}{\text{Var}(\hat{\beta}_{trt})} \right) $$
+
+```{r info_calc}
+# Blinded SSR
+blinded_res <- blinded_ssr(
+  data = interim_data,
+  ratio = 1,
+  lambda1_planning = lambda1_plan,
+  lambda2_planning = lambda2_plan,
+  power = power_plan,
+  alpha = alpha_plan,
+  accrual_rate = accrual_rate_plan,
+  accrual_duration = accrual_dur_plan,
+  trial_duration = trial_dur_plan
+)
+
+# Unblinded SSR
+ssr_res <- unblinded_ssr(
+  data = interim_data,
+  ratio = 1,
+  lambda1_planning = lambda1_plan,
+  lambda2_planning = lambda2_plan,
+  power = power_plan,
+  alpha = alpha_plan,
+  accrual_rate = accrual_rate_plan,
+  accrual_duration = accrual_dur_plan,
+  trial_duration = trial_dur_plan
+)
+
+cat("Blinded SSR N:", ceiling(blinded_res$n_total_blinded), "\n")
+cat("Unblinded SSR N:", ceiling(ssr_res$n_total_unblinded), "\n")
+print(ssr_res)
+```
+
+The estimated control rate is `r round(ssr_res$lambda1_unblinded, 3)`, which is lower than the planned `r lambda1_plan`.
+The information fraction is `r round(ssr_res$info_fraction, 3)`.
+
+### Sample size re-estimation
+
+Since the control rate is lower and dispersion is higher, the information accumulates slower than planned. 
+To maintain power, we need to increase the sample size or follow-up.
+
+The `unblinded_ssr` function estimates the required total sample size to be `r ceiling(ssr_res$n_total_unblinded)`. We ensure the sample size is at least as large as the planned sample size.
+
+```{r update_design}
+n_planned <- ceiling(design_plan$n_total)
+n_estimated <- ceiling(ssr_res$n_total_unblinded)
+
+# Ensure we don't decrease sample size
+n_final <- max(n_planned, n_estimated)
+
+if (n_final > n_planned) {
+  cat("Increasing sample size from", n_planned, "to", n_final, "\n")
+  
+  # Calculate new durations based on constant accrual rate
+  # We extend enrollment to reach the new target N
+  new_accrual_dur <- n_final / accrual_rate_plan
+  
+  # We maintain the planned max follow-up of 12 months
+  # So the trial duration extends by the same amount as the accrual duration
+  new_trial_dur <- new_accrual_dur + 12 
+  
+  cat("New Accrual Duration:", round(new_accrual_dur, 2), "months\n")
+  cat("New Trial Duration:", round(new_trial_dur, 2), "months\n")
+} else {
+  cat("No sample size increase needed.\n")
+  new_accrual_dur <- accrual_dur_plan
+  new_trial_dur <- trial_dur_plan
+  n_final <- n_planned
+}
+```
+
+## Final analysis
+
+We proceed to the final analysis at Month `r round(new_trial_dur, 1)`. We include the additional patients if the sample size was increased.
+
+```{r final_analysis}
+# Update the dataset to include the additional patients
+sim_data_final <- sim_data[1:n_final, ]
+
+# Cut at final analysis time
+final_data <- cut_data_by_date(sim_data_final, cut_date = new_trial_dur)
+
+# Average exposure
+mean(final_data$tte)
+
+# Fit final model
+fit_final <- glm.nb(events ~ treatment + offset(log(tte)), data = final_data)
+summary(fit_final)
+
+# Calculate final information
+var_beta <- vcov(fit_final)[2, 2]
+final_info <- 1 / var_beta
+cat("Final Information:", final_info, "\n")
+cat("Target Information:", ssr_res$target_info, "\n")
+```
+
+### Updating bounds
+
+If the final information differs from the target (e.g., it is lower), we need to adjust the critical values to ensure we spend exactly $\alpha$. We use the `gsDesign` package with `usTime` (user-specified information fraction) to update the bounds.
+
+```{r update_bounds}
+# Information fraction at final analysis
+# If final_info < target_info, fraction < 1. 
+# However, for the final analysis, we typically want to spend all remaining alpha.
+# We can treat the current info as the "maximum" info for the spending function.
+
+# Example group sequential design (O'Brien-Fleming spending)
+# We assume the interim was at the observed information fraction
+info_fractions <- c(ssr_res$info_fraction, final_info / ssr_res$target_info)
+
+# If final fraction < 1, we can force it to 1 to spend all alpha, 
+# effectively accepting the lower power.
+# Or we can use the actual information fractions in a spending function approach.
+
+# Let's assume we want to spend all alpha at the final analysis regardless of info.
+# We set the final timing to 1.
+info_fractions_spending <- c(ssr_res$info_fraction, 1)
+
+# Update bounds
+gs_update <- gsDesign(
+  k = 2,
+  test.type = 1,
+  alpha = alpha_plan,
+  sfu = sfLDOF,
+  usTime = info_fractions_spending,
+  n.I = c(ssr_res$unblinded_info, final_info)
+)
+
+gsBoundSummary(gs_update,
+    deltaname = "RR",
+    logdelta = TRUE,
+    Nname = "Information",
+    timename = "Month",
+    digits = 4,
+    ddigits = 2) |> gt() |>
+  tab_header(
+    title = "Updated Group Sequential Design Bounds",
+    subtitle = paste0(
+      "Final Information = ", round(final_info, 2)
+    )
+  )
+
+# Test statistic
+z_score <- coef(fit_final)["treatmentExperimental"] / sqrt(var_beta)
+# Note: gsDesign assumes Z > 0 for efficacy. 
+# Our model gives log(RR) < 0 for efficacy.
+# So Z_stat = - (log(RR)) / SE
+z_stat <- -coef(fit_final)["treatmentExperimental"] / sqrt(var_beta)
+
+cat("Z-statistic:", z_stat, "\n")
+cat("Final Bound:", gs_update$upper$bound[2], "\n")
+
+if (z_stat > gs_update$upper$bound[2]) {
+  cat("Reject Null Hypothesis\n")
+} else {
+  cat("Fail to Reject Null Hypothesis\n")
+}
+```
+
+## References

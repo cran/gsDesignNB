@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Seasonal event simulation</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Seasonal event simulation</h1>
+
+
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(gsDesignNB)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(data.table)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span></code></pre></div>
+<p>This vignette demonstrates how to simulate recurrent events when
+event rates vary by season. This is useful for conditions with seasonal
+patterns, such as respiratory infections.</p>
+<div id="simulation-setup" class="section level2">
+<h2>Simulation setup</h2>
+<p>We design a small trial with the following characteristics:</p>
+<ul>
+<li><strong>Randomization start:</strong> January 1, 2024.</li>
+<li><strong>Sample size:</strong> 20 subjects.</li>
+<li><strong>Enrollment:</strong> 6 months duration.</li>
+<li><strong>Follow-up:</strong> 1 year.</li>
+<li><strong>Seasonality:</strong> Higher event rates in Winter/Fall,
+lower in Spring/Summer.</li>
+</ul>
+<div id="define-parameters" class="section level3">
+<h3>Define parameters</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># Randomization starts in Winter</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>rand_start <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(<span class="st">&quot;2024-01-01&quot;</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="co"># Enrollment: 20 subjects over 6 months</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>enroll_rate <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>  <span class="at">rate =</span> <span class="dv">20</span> <span class="sc">/</span> <span class="dv">6</span>,</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>  <span class="at">duration =</span> <span class="dv">6</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>) <span class="co"># time unit: months?</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="co"># Note: In nb_sim_seasonal, we assumed rate units match max_followup units.</span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="co"># Let&#39;s use YEARS as the time unit for consistency with the package conventions often used.</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="co"># If max_followup = 1 (year), then rates are per year.</span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="co"># Enrollment duration = 0.5 years.</span></span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a>enroll_rate <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>  <span class="at">rate =</span> <span class="dv">20</span> <span class="sc">/</span> <span class="fl">0.5</span>,</span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a>  <span class="at">duration =</span> <span class="fl">0.5</span></span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a>)</span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a><span class="co"># Seasonal Failure Rates (per year)</span></span>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a><span class="co"># Winter: High</span></span>
+<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a><span class="co"># Spring: Low</span></span>
+<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a><span class="co"># Summer: Low</span></span>
+<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a><span class="co"># Fall: Medium-High</span></span>
+<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a></span>
+<span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a>fail_rate <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb2-26"><a href="#cb2-26" tabindex="-1"></a>  <span class="at">treatment =</span> <span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">&quot;Control&quot;</span>, <span class="st">&quot;Experimental&quot;</span>), <span class="at">each =</span> <span class="dv">4</span>),</span>
+<span id="cb2-27"><a href="#cb2-27" tabindex="-1"></a>  <span class="at">season =</span> <span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">&quot;Winter&quot;</span>, <span class="st">&quot;Spring&quot;</span>, <span class="st">&quot;Summer&quot;</span>, <span class="st">&quot;Fall&quot;</span>), <span class="dv">2</span>),</span>
+<span id="cb2-28"><a href="#cb2-28" tabindex="-1"></a>  <span class="at">rate =</span> <span class="fu">c</span>(</span>
+<span id="cb2-29"><a href="#cb2-29" tabindex="-1"></a>    <span class="co"># Control</span></span>
+<span id="cb2-30"><a href="#cb2-30" tabindex="-1"></a>    <span class="fl">2.0</span>, <span class="co"># Winter</span></span>
+<span id="cb2-31"><a href="#cb2-31" tabindex="-1"></a>    <span class="fl">0.5</span>, <span class="co"># Spring</span></span>
+<span id="cb2-32"><a href="#cb2-32" tabindex="-1"></a>    <span class="fl">0.2</span>, <span class="co"># Summer</span></span>
+<span id="cb2-33"><a href="#cb2-33" tabindex="-1"></a>    <span class="fl">1.5</span>, <span class="co"># Fall</span></span>
+<span id="cb2-34"><a href="#cb2-34" tabindex="-1"></a>    <span class="co"># Experimental (assume 30% reduction)</span></span>
+<span id="cb2-35"><a href="#cb2-35" tabindex="-1"></a>    <span class="fl">2.0</span> <span class="sc">*</span> <span class="fl">0.7</span>,</span>
+<span id="cb2-36"><a href="#cb2-36" tabindex="-1"></a>    <span class="fl">0.5</span> <span class="sc">*</span> <span class="fl">0.7</span>,</span>
+<span id="cb2-37"><a href="#cb2-37" tabindex="-1"></a>    <span class="fl">0.2</span> <span class="sc">*</span> <span class="fl">0.7</span>,</span>
+<span id="cb2-38"><a href="#cb2-38" tabindex="-1"></a>    <span class="fl">1.5</span> <span class="sc">*</span> <span class="fl">0.7</span></span>
+<span id="cb2-39"><a href="#cb2-39" tabindex="-1"></a>  ),</span>
+<span id="cb2-40"><a href="#cb2-40" tabindex="-1"></a>  <span class="at">dispersion =</span> <span class="fl">0.5</span> <span class="co"># Constant dispersion</span></span>
+<span id="cb2-41"><a href="#cb2-41" tabindex="-1"></a>)</span>
+<span id="cb2-42"><a href="#cb2-42" tabindex="-1"></a></span>
+<span id="cb2-43"><a href="#cb2-43" tabindex="-1"></a><span class="co"># Dropout (5% per year)</span></span>
+<span id="cb2-44"><a href="#cb2-44" tabindex="-1"></a>dropout_rate <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb2-45"><a href="#cb2-45" tabindex="-1"></a>  <span class="at">treatment =</span> <span class="fu">c</span>(<span class="st">&quot;Control&quot;</span>, <span class="st">&quot;Experimental&quot;</span>),</span>
+<span id="cb2-46"><a href="#cb2-46" tabindex="-1"></a>  <span class="at">rate =</span> <span class="fu">c</span>(<span class="fl">0.05</span>, <span class="fl">0.05</span>),</span>
+<span id="cb2-47"><a href="#cb2-47" tabindex="-1"></a>  <span class="at">duration =</span> <span class="fu">c</span>(<span class="dv">100</span>, <span class="dv">100</span>)</span>
+<span id="cb2-48"><a href="#cb2-48" tabindex="-1"></a>)</span></code></pre></div>
+</div>
+</div>
+<div id="run-simulation" class="section level2">
+<h2>Run simulation</h2>
+<p>We use <code>nb_sim_seasonal()</code> to simulate the trial.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>sim_data <span class="ot">&lt;-</span> <span class="fu">nb_sim_seasonal</span>(</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  <span class="at">enroll_rate =</span> enroll_rate,</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>  <span class="at">fail_rate =</span> fail_rate,</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>  <span class="at">dropout_rate =</span> dropout_rate,</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  <span class="at">max_followup =</span> <span class="dv">1</span>, <span class="co"># 1 year</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  <span class="at">randomization_start_date =</span> rand_start,</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">20</span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>)</span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co"># View structure of the output</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="fu">head</span>(sim_data)</span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt;   id treatment enroll_time season     start       end event  cal_start</span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt; 1  1   Control  0.02108643 Winter 0.0000000 0.1431846     0 2024-01-08</span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt; 2  1   Control  0.02108643 Spring 0.1431846 0.3950669     0 2024-03-01</span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt; 3  1   Control  0.02108643 Summer 0.3950669 0.6469492     0 2024-06-01</span></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt; 4  1   Control  0.02108643   Fall 0.6469492 0.8446997     1 2024-09-01</span></span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt; 5  1   Control  0.02108643   Fall 0.8446997 0.8960936     0 2024-11-12</span></span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="co">#&gt; 6  1   Control  0.02108643 Winter 0.8960936 1.0000000     0 2024-12-01</span></span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a><span class="co">#&gt;      cal_end</span></span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="co">#&gt; 1 2024-03-01</span></span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a><span class="co">#&gt; 2 2024-06-01</span></span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a><span class="co">#&gt; 3 2024-09-01</span></span>
+<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a><span class="co">#&gt; 4 2024-11-12</span></span>
+<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a><span class="co">#&gt; 5 2024-12-01</span></span>
+<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a><span class="co">#&gt; 6 2025-01-07</span></span></code></pre></div>
+<p>The output contains multiple rows per subject, split by season
+intervals. <code>event</code> is 1 if an event occurred at the end of
+the interval, and 0 otherwise.</p>
+</div>
+<div id="analysis-at-a-cut-date" class="section level2">
+<h2>Analysis at a cut date</h2>
+<p>We can cut the data at a specific calendar date using
+<code>cut_data_by_date()</code>. This function aggregates the seasonal
+intervals up to the cut date, subtracting any event gaps if
+specified.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># Cut data at 9 months (0.75 years)</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>cut_date <span class="ot">&lt;-</span> <span class="fl">0.75</span></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co"># Use a small gap (e.g., 7 days)</span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>gap_days <span class="ot">&lt;-</span> <span class="dv">7</span> <span class="sc">/</span> <span class="fl">365.25</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>analysis_data <span class="ot">&lt;-</span> <span class="fu">cut_data_by_date</span>(sim_data, <span class="at">cut_date =</span> cut_date, <span class="at">event_gap =</span> gap_days)</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="fu">head</span>(analysis_data)</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt;   id    treatment enroll_time season events        tte  tte_total</span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt; 1  1      Control  0.02108643   Fall      0 0.08196441 0.08196441</span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt; 2  1      Control  0.02108643 Spring      0 0.25188227 0.25188227</span></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co">#&gt; 3  1      Control  0.02108643 Summer      0 0.25188227 0.25188227</span></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt; 4  1      Control  0.02108643 Winter      0 0.14318462 0.14318462</span></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt; 5  2 Experimental  0.03550169   Fall      0 0.08196441 0.08196441</span></span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="co">#&gt; 6  2 Experimental  0.03550169 Spring      0 0.25188227 0.25188227</span></span></code></pre></div>
+<p>The <code>analysis_data</code> is aggregated by subject and season.
+This allows for seasonal adjustments in the analysis if desired.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># Summarize events by season</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>analysis_data <span class="sc">%&gt;%</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>  <span class="fu">group_by</span>(season, treatment) <span class="sc">%&gt;%</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>  <span class="fu">summarize</span>(</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>    <span class="at">Subjects =</span> <span class="fu">n_distinct</span>(id),</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>    <span class="at">TotalExposure =</span> <span class="fu">sum</span>(tte),</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>    <span class="at">TotalEvents =</span> <span class="fu">sum</span>(events),</span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>    <span class="at">Rate =</span> <span class="fu">sum</span>(events) <span class="sc">/</span> <span class="fu">sum</span>(tte)</span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>  )</span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co">#&gt; `summarise()` has regrouped the output.</span></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="co">#&gt; ℹ Summaries were computed grouped by season and treatment.</span></span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="co">#&gt; ℹ Output is grouped by season.</span></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="co">#&gt; ℹ Use `summarise(.groups = &quot;drop_last&quot;)` to silence this message.</span></span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="co">#&gt; ℹ Use `summarise(.by = c(season, treatment))` for per-operation grouping</span></span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="co">#&gt;   (`?dplyr::dplyr_by`) instead.</span></span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a><span class="co">#&gt; # A tibble: 8 × 6</span></span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a><span class="co">#&gt; # Groups:   season [4]</span></span>
+<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a><span class="co">#&gt;   season treatment    Subjects TotalExposure TotalEvents  Rate</span></span>
+<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;  &lt;chr&gt;           &lt;int&gt;         &lt;dbl&gt;       &lt;dbl&gt; &lt;dbl&gt;</span></span>
+<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a><span class="co">#&gt; 1 Fall   Control            10         0.820           0 0    </span></span>
+<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a><span class="co">#&gt; 2 Fall   Experimental       10         0.781           2 2.56 </span></span>
+<span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a><span class="co">#&gt; 3 Spring Control            10         2.02            1 0.495</span></span>
+<span id="cb5-24"><a href="#cb5-24" tabindex="-1"></a><span class="co">#&gt; 4 Spring Experimental       10         2.06            3 1.46 </span></span>
+<span id="cb5-25"><a href="#cb5-25" tabindex="-1"></a><span class="co">#&gt; 5 Summer Control            10         2.52            0 0    </span></span>
+<span id="cb5-26"><a href="#cb5-26" tabindex="-1"></a><span class="co">#&gt; 6 Summer Experimental       10         2.52            0 0    </span></span>
+<span id="cb5-27"><a href="#cb5-27" tabindex="-1"></a><span class="co">#&gt; 7 Winter Control             5         0.395           0 0    </span></span>
+<span id="cb5-28"><a href="#cb5-28" tabindex="-1"></a><span class="co">#&gt; 8 Winter Experimental        5         0.408           0 0</span></span></code></pre></div>
+</div>
+<div id="seasonal-and-treatment-effect-estimation" class="section level2">
+<h2>Seasonal and treatment effect estimation</h2>
+<p>We can estimate the seasonal effects and the treatment effect using a
+negative binomial generalized linear model. We use the logarithm of the
+exposure time as an offset.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="co"># Fit negative binomial GLM</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="co"># We include season and treatment in the model</span></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>fit <span class="ot">&lt;-</span> MASS<span class="sc">::</span><span class="fu">glm.nb</span>(</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  events <span class="sc">~</span> treatment <span class="sc">+</span> season <span class="sc">+</span> <span class="fu">offset</span>(<span class="fu">log</span>(tte)),</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>  <span class="at">data =</span> analysis_data[analysis_data<span class="sc">$</span>tte <span class="sc">&gt;</span> <span class="dv">0</span>, ]</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>)</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co"># Summary of the model</span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="fu">summary</span>(fit)</span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="co">#&gt; Call:</span></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co">#&gt; MASS::glm.nb(formula = events ~ treatment + season + offset(log(tte)), </span></span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="co">#&gt;     data = analysis_data[analysis_data$tte &gt; 0, ], init.theta = 0.7046293947, </span></span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a><span class="co">#&gt;     link = log)</span></span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a><span class="co">#&gt; Coefficients:</span></span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a><span class="co">#&gt;                         Estimate Std. Error z value Pr(&gt;|z|)</span></span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a><span class="co">#&gt; (Intercept)           -9.344e-01  1.230e+00  -0.760    0.447</span></span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a><span class="co">#&gt; treatmentExperimental  1.712e+00  1.172e+00   1.460    0.144</span></span>
+<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a><span class="co">#&gt; seasonSpring          -1.881e-01  9.655e-01  -0.195    0.845</span></span>
+<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a><span class="co">#&gt; seasonSummer          -3.559e+01  1.501e+07   0.000    1.000</span></span>
+<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a><span class="co">#&gt; seasonWinter          -3.409e+01  1.850e+07   0.000    1.000</span></span>
+<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-24"><a href="#cb6-24" tabindex="-1"></a><span class="co">#&gt; (Dispersion parameter for Negative Binomial(0.7046) family taken to be 1)</span></span>
+<span id="cb6-25"><a href="#cb6-25" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-26"><a href="#cb6-26" tabindex="-1"></a><span class="co">#&gt;     Null deviance: 28.268  on 69  degrees of freedom</span></span>
+<span id="cb6-27"><a href="#cb6-27" tabindex="-1"></a><span class="co">#&gt; Residual deviance: 17.594  on 65  degrees of freedom</span></span>
+<span id="cb6-28"><a href="#cb6-28" tabindex="-1"></a><span class="co">#&gt; AIC: 45.764</span></span>
+<span id="cb6-29"><a href="#cb6-29" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-30"><a href="#cb6-30" tabindex="-1"></a><span class="co">#&gt; Number of Fisher Scoring iterations: 1</span></span>
+<span id="cb6-31"><a href="#cb6-31" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-32"><a href="#cb6-32" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-33"><a href="#cb6-33" tabindex="-1"></a><span class="co">#&gt;               Theta:  0.70 </span></span>
+<span id="cb6-34"><a href="#cb6-34" tabindex="-1"></a><span class="co">#&gt;           Std. Err.:  1.24 </span></span>
+<span id="cb6-35"><a href="#cb6-35" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-36"><a href="#cb6-36" tabindex="-1"></a><span class="co">#&gt;  2 x log-likelihood:  -33.764</span></span>
+<span id="cb6-37"><a href="#cb6-37" tabindex="-1"></a></span>
+<span id="cb6-38"><a href="#cb6-38" tabindex="-1"></a><span class="co"># Extract estimates</span></span>
+<span id="cb6-39"><a href="#cb6-39" tabindex="-1"></a>coef_summary <span class="ot">&lt;-</span> <span class="fu">summary</span>(fit)<span class="sc">$</span>coefficients</span>
+<span id="cb6-40"><a href="#cb6-40" tabindex="-1"></a></span>
+<span id="cb6-41"><a href="#cb6-41" tabindex="-1"></a><span class="co"># Seasonal effects (relative to reference season, likely Fall based on alphabetical order)</span></span>
+<span id="cb6-42"><a href="#cb6-42" tabindex="-1"></a><span class="co"># Treatment effect (Experimental vs Control)</span></span>
+<span id="cb6-43"><a href="#cb6-43" tabindex="-1"></a><span class="fu">print</span>(coef_summary)</span>
+<span id="cb6-44"><a href="#cb6-44" tabindex="-1"></a><span class="co">#&gt;                          Estimate   Std. Error       z value  Pr(&gt;|z|)</span></span>
+<span id="cb6-45"><a href="#cb6-45" tabindex="-1"></a><span class="co">#&gt; (Intercept)            -0.9344423 1.229766e+00 -7.598537e-01 0.4473421</span></span>
+<span id="cb6-46"><a href="#cb6-46" tabindex="-1"></a><span class="co">#&gt; treatmentExperimental   1.7117150 1.172198e+00  1.460261e+00 0.1442185</span></span>
+<span id="cb6-47"><a href="#cb6-47" tabindex="-1"></a><span class="co">#&gt; seasonSpring           -0.1881428 9.654901e-01 -1.948676e-01 0.8454966</span></span>
+<span id="cb6-48"><a href="#cb6-48" tabindex="-1"></a><span class="co">#&gt; seasonSummer          -35.5862751 1.500600e+07 -2.371470e-06 0.9999981</span></span>
+<span id="cb6-49"><a href="#cb6-49" tabindex="-1"></a><span class="co">#&gt; seasonWinter          -34.0933221 1.850416e+07 -1.842468e-06 0.9999985</span></span>
+<span id="cb6-50"><a href="#cb6-50" tabindex="-1"></a></span>
+<span id="cb6-51"><a href="#cb6-51" tabindex="-1"></a><span class="co"># Estimated Rate Ratio (Experimental / Control)</span></span>
+<span id="cb6-52"><a href="#cb6-52" tabindex="-1"></a>rr <span class="ot">&lt;-</span> <span class="fu">exp</span>(<span class="fu">coef</span>(fit)[<span class="st">&quot;treatmentExperimental&quot;</span>])</span>
+<span id="cb6-53"><a href="#cb6-53" tabindex="-1"></a><span class="fu">message</span>(<span class="st">&quot;Estimated Rate Ratio (Experimental / Control): &quot;</span>, <span class="fu">round</span>(rr, <span class="dv">3</span>))</span>
+<span id="cb6-54"><a href="#cb6-54" tabindex="-1"></a><span class="co">#&gt; Estimated Rate Ratio (Experimental / Control): 5.538</span></span>
+<span id="cb6-55"><a href="#cb6-55" tabindex="-1"></a><span class="fu">message</span>(<span class="st">&quot;True Design Rate Ratio: &quot;</span>, <span class="fl">0.7</span>)</span>
+<span id="cb6-56"><a href="#cb6-56" tabindex="-1"></a><span class="co">#&gt; True Design Rate Ratio: 0.7</span></span></code></pre></div>
+<div id="variance-and-information" class="section level3">
+<h3>Variance and information</h3>
+<p>The variance of the treatment effect estimate can be extracted from
+the covariance matrix of the model. The statistical information is the
+inverse of this variance.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co"># Variance of the treatment effect coefficient</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>var_beta <span class="ot">&lt;-</span> <span class="fu">vcov</span>(fit)[<span class="st">&quot;treatmentExperimental&quot;</span>, <span class="st">&quot;treatmentExperimental&quot;</span>]</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="fu">message</span>(<span class="st">&quot;Variance of Treatment Effect (log-scale): &quot;</span>, var_beta)</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="co">#&gt; Variance of Treatment Effect (log-scale): 1.37404900110776</span></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="co"># Statistical Information</span></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>info <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">/</span> var_beta</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="fu">message</span>(<span class="st">&quot;Statistical Information: &quot;</span>, info)</span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt; Statistical Information: 0.727776083090051</span></span></code></pre></div>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

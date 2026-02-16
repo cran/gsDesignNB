@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Sample size calculation for negative binomial outcomes</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<style type="text/css">
+
+div.csl-bib-body { }
+div.csl-entry {
+clear: both;
+margin-bottom: 0em;
+}
+.hanging div.csl-entry {
+margin-left:2em;
+text-indent:-2em;
+}
+div.csl-left-margin {
+min-width:2em;
+float:left;
+}
+div.csl-right-inline {
+margin-left:2em;
+padding-left:1em;
+}
+div.csl-indent {
+margin-left: 2em;
+}
+</style>
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Sample size calculation for negative
+binomial outcomes</h1>
+
+
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(gsDesignNB)</span></code></pre></div>
+<p>This vignette describes the methodology used in the
+<code>sample_size_nbinom</code> function for calculating sample sizes
+when comparing two treatment groups with negative binomial outcomes.</p>
+<div id="methodology" class="section level2">
+<h2>Methodology</h2>
+<p>We wish to test for differences in rates of recurrent events between
+two treatment groups using a negative binomial model to account for
+overdispersion. The underlying test is to evaluate the log rate ratio
+between the two groups. This is parameterized in terms of event rates
+<span class="math inline">\(\lambda_1\)</span> and <span class="math inline">\(\lambda_2\)</span> (events per unit time) for the
+control and treatment groups, respectively. The usual null hypothesis is
+that the rates are equal (<span class="math inline">\(H_0: \lambda_1 =
+\lambda_2\)</span>) with a one-sided alternative (<span class="math inline">\(H_1: \lambda_1 &gt; \lambda_2\)</span>). However,
+non-inferiority or equivalence tests can also be performed by specifying
+an appropriate null hypothesis.</p>
+<div id="negative-binomial-distribution" class="section level3">
+<h3>Negative binomial distribution</h3>
+<p>We assume the outcome <span class="math inline">\(Y\)</span> follows
+a negative binomial distribution with mean <span class="math inline">\(\mu\)</span> and a common dispersion parameter
+<span class="math inline">\(k\)</span> for both treatment groups, such
+that the variance is given by:</p>
+<p><span class="math display">\[ \mathrm{Var}(Y) = \mu + k \mu^2
+\]</span></p>
+<p>Note that in R’s <code>rnbinom</code> parameterization, <span class="math inline">\(k = 1/\texttt{size}\)</span>.</p>
+</div>
+<div id="connection-between-rates-and-counts" class="section level3">
+<h3>Connection between rates and counts</h3>
+<p>The negative binomial distribution can be motivated by a
+Gamma-Poisson mixture model. Suppose that for each subject <span class="math inline">\(i\)</span>, the event rate <span class="math inline">\(\Lambda_i\)</span> is a random variable following
+a Gamma distribution with shape <span class="math inline">\(\alpha =
+1/k\)</span> and rate <span class="math inline">\(\beta = 1/(k
+\lambda)\)</span>, where <span class="math inline">\(\lambda\)</span> is
+the underlying population event rate and <span class="math inline">\(k\)</span> is the dispersion parameter. The mean
+of this Gamma distribution is <span class="math inline">\(\mathrm{E}[\Lambda_i] = \alpha / \beta =
+\lambda\)</span> and the variance is <span class="math inline">\(\mathrm{Var}(\Lambda_i) = \alpha / \beta^2 = k
+\lambda^2\)</span>.</p>
+<p>Given the subject-specific rate <span class="math inline">\(\Lambda_i\)</span>, the number of events <span class="math inline">\(Y_i\)</span> observed over a time period <span class="math inline">\(t_i\)</span> follows a Poisson distribution with
+rate <span class="math inline">\(\Lambda_i t_i\)</span>: <span class="math display">\[ Y_i | \Lambda_i \sim \text{Poisson}(\Lambda_i
+t_i) \]</span></p>
+<p>The marginal distribution of <span class="math inline">\(Y_i\)</span>
+(integrating out <span class="math inline">\(\Lambda_i\)</span>) is then
+a negative binomial distribution with mean <span class="math inline">\(\mu_i = \lambda t_i\)</span> and dispersion
+parameter <span class="math inline">\(k\)</span>. The variance is: <span class="math display">\[ \mathrm{Var}(Y_i) =
+\mathrm{E}[\mathrm{Var}(Y_i|\Lambda_i)] +
+\mathrm{Var}(\mathrm{E}[Y_i|\Lambda_i]) \]</span> <span class="math display">\[ = \mathrm{E}[\Lambda_i t_i] +
+\mathrm{Var}(\Lambda_i t_i) \]</span> <span class="math display">\[ =
+\lambda t_i + t_i^2 (k \lambda^2) \]</span> <span class="math display">\[ = \mu_i + k \mu_i^2 \]</span></p>
+<p>This formulation connects the event rate <span class="math inline">\(\lambda\)</span> (used in the hypothesis testing
+framework) with the expected count <span class="math inline">\(\mu\)</span> (used in the negative binomial
+parameterization), showing how heterogeneity in individual rates leads
+to the overdispersion characteristic of the negative binomial
+distribution.</p>
+</div>
+<div id="graphical-representation-of-negative-binomial-distributions" class="section level3">
+<h3>Graphical representation of negative binomial distributions</h3>
+<p>In the following panel, we illustrate an expected value of 5 events
+over a fixed time period for different dispersion parameters <span class="math inline">\(k\)</span> (0, 0.5, 1). As <span class="math inline">\(k\)</span> increases, the variance increases,
+leading to a wider spread of possible event counts.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">3</span>))</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>k_values <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.5</span>, <span class="dv">1</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="cf">for</span> (k <span class="cf">in</span> k_values) {</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>  mu <span class="ot">&lt;-</span> <span class="dv">5</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>  x <span class="ot">&lt;-</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">15</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>  <span class="cf">if</span> (k <span class="sc">==</span> <span class="dv">0</span>) {</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>    probs <span class="ot">&lt;-</span> <span class="fu">dpois</span>(x, <span class="at">lambda =</span> mu)</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>    size <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">/</span> k</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>    probs <span class="ot">&lt;-</span> <span class="fu">dnbinom</span>(x, <span class="at">size =</span> size, <span class="at">mu =</span> mu)</span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>  }</span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>  <span class="fu">barplot</span>(probs,</span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>    <span class="at">names.arg =</span> x, <span class="at">horiz =</span> <span class="cn">TRUE</span>, <span class="at">main =</span> <span class="fu">paste</span>(<span class="st">&quot;k =&quot;</span>, k),</span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a>    <span class="at">xlab =</span> <span class="st">&quot;Probability&quot;</span>, <span class="at">ylab =</span> <span class="st">&quot;Event Count&quot;</span>, <span class="at">las =</span> <span class="dv">1</span>, <span class="at">xlim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.2</span>)</span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>  )</span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a>}</span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
+</div>
+<div id="sample-size-formula" class="section level3">
+<h3>Sample size formula</h3>
+<p>The sample size calculation is based on the asymptotic normality of
+the log rate ratio, <span class="math inline">\(\theta = \log(\lambda_2
+/ \lambda_1)\)</span>. This approach corresponds to <strong>Method
+3</strong> of <span class="citation">Zhu and Lakkis (2014)</span>, which
+uses a Wald statistic for the log rate ratio. It is also the method
+described by <span class="citation">Friede and Schmidli (2010)</span>
+and <span class="citation">Mütze et al. (2019)</span> (as implemented in
+the <code>gscounts</code> package).</p>
+<p>The total sample size <span class="math inline">\(n_{\text{total}}\)</span> is calculated as:</p>
+<p><span class="math display">\[ n_{\text{total}} = \frac{(z_{\alpha/s}
++ z_{\beta})^2 \cdot \tilde{V}}{(\theta - \theta_0)^2} \]</span></p>
+<p>where:</p>
+<ul>
+<li><span class="math inline">\(z_{\alpha/s}\)</span> and <span class="math inline">\(z_{\beta}\)</span> are the standard normal
+critical values for the significance level <span class="math inline">\(\alpha\)</span> (with <span class="math inline">\(s=1\)</span> or <span class="math inline">\(2\)</span> sided) and power <span class="math inline">\(1-\beta\)</span>.</li>
+<li><span class="math inline">\(\theta = \log(\lambda_2 /
+\lambda_1)\)</span> is the log rate ratio.</li>
+<li><span class="math inline">\(\theta_0\)</span> is the log rate ratio
+under the null hypothesis (default is 0 for superiority).</li>
+<li><span class="math inline">\(\tilde{V}\)</span> is the average
+variance per subject for <span class="math inline">\(\hat{\theta} =
+\log(\widehat{\lambda_2 / \lambda_1})\)</span>, defined as:</li>
+</ul>
+<p><span class="math display">\[ \tilde{V} = \frac{1/ \mu_1 + k}{p_1} +
+\frac{1/ \mu_2 + k}{p_2} \]</span></p>
+<p>where:</p>
+<ul>
+<li><span class="math inline">\(p_1 = n_1/n_{\text{total}}\)</span> and
+<span class="math inline">\(p_2 = n_2/n_{\text{total}}\)</span> are the
+allocation proportions.</li>
+<li><span class="math inline">\(\mu_i = \lambda_i \cdot \bar{t}\)</span>
+is the expected mean count for group <span class="math inline">\(i\)</span> over the average exposure duration
+<span class="math inline">\(\bar{t}\)</span>.</li>
+<li><span class="math inline">\(k\)</span> is the dispersion parameter.
+While the cited literature assumes a common dispersion parameter across
+groups, <code>sample_size_nbinom()</code> allows for different
+dispersion parameters <span class="math inline">\(k_1\)</span> and <span class="math inline">\(k_2\)</span> for the control and treatment groups,
+respectively. In this case, the variance formula becomes:</li>
+</ul>
+<p><span class="math display">\[ \tilde{V} = \frac{1/ \mu_1 + k_1}{p_1}
++ \frac{1/ \mu_2 + k_2}{p_2} \]</span></p>
+<p>This formula assumes that the exposure duration is the same for both
+groups (or uses an average exposure <span class="math inline">\(\bar{t}\)</span>). However,
+<code>sample_size_nbinom()</code> allows for different dropout rates for
+the two groups, which results in different average exposure durations
+<span class="math inline">\(\bar{t}_1\)</span> and <span class="math inline">\(\bar{t}_2\)</span>. In this case, <span class="math inline">\(\mu_1 = \lambda_1 \bar{t}_1\)</span> and <span class="math inline">\(\mu_2 = \lambda_2 \bar{t}_2\)</span>. Also, when
+the assumed gap between events is &gt; 0, the expected exposure is
+impacted differently for each group based on their event rates.</p>
+</div>
+<div id="non-inferiority-and-super-superiority" class="section level3">
+<h3>Non-inferiority and Super-superiority</h3>
+<p>The parameter <code>rr0</code> (<span class="math inline">\(\theta_0\)</span>) allows for testing
+non-inferiority or super-superiority hypotheses. The null hypothesis is
+<span class="math inline">\(H_0: \lambda_2 / \lambda_1 \ge
+\theta_0\)</span> (assuming lower rates are better).</p>
+<ul>
+<li><strong>Superiority (default):</strong> <span class="math inline">\(\theta_0 = 1\)</span>. We test if the treatment
+rate is lower than the control rate.</li>
+<li><strong>Non-inferiority:</strong> <span class="math inline">\(\theta_0 &gt; 1\)</span> (e.g., 1.1). We test if
+the treatment rate is not worse than the control rate by more than a
+margin of 10%.</li>
+<li><strong>Super-superiority:</strong> <span class="math inline">\(\theta_0 &lt; 1\)</span> (e.g., 0.8). We test if
+the treatment rate is better than the control rate by at least 20%.</li>
+</ul>
+</div>
+</div>
+<div id="average-exposure-with-variable-accrual-and-dropout" class="section level2">
+<h2>Average exposure with variable accrual and dropout</h2>
+<p>When the accrual rate is not constant or when the trial has a fixed
+duration with ongoing recruitment, the exposure time for patients will
+vary. The function calculates an <em>average exposure</em> time to use
+in the sample size formula. Additionally, if a <code>dropout_rate</code>
+is specified, the exposure is adjusted to account for patients leaving
+the study early.</p>
+<p>Let <span class="math inline">\(T\)</span> be the total trial
+duration. Suppose recruitment occurs in <span class="math inline">\(J\)</span> segments, where the <span class="math inline">\(j\)</span>-th segment has accrual rate <span class="math inline">\(R_j\)</span> and duration <span class="math inline">\(D_j\)</span>.</p>
+<p>If <code>dropout_rate</code> is 0:</p>
+<ol style="list-style-type: decimal">
+<li>The expected number of patients recruited in segment <span class="math inline">\(j\)</span> is <span class="math inline">\(N_j =
+R_j \cdot D_j\)</span>.</li>
+<li>The start time of segment <span class="math inline">\(j\)</span> is
+<span class="math inline">\(S_{j-1} = \sum_{i=1}^{j-1} D_i\)</span>
+(with <span class="math inline">\(S_0 = 0\)</span>).</li>
+<li>The midpoint of recruitment for segment <span class="math inline">\(j\)</span> is <span class="math inline">\(M_j =
+S_{j-1} + D_j/2\)</span>.</li>
+<li>The average follow-up (exposure) time for patients recruited in
+segment <span class="math inline">\(j\)</span> is approximately <span class="math inline">\(E_j = T - M_j\)</span>.</li>
+</ol>
+<p>If <code>dropout_rate</code> (<span class="math inline">\(\delta\)</span>) &gt; 0, the average exposure is
+calculated by integrating the exposure function over the recruitment
+interval:</p>
+<p><span class="math display">\[
+\begin{aligned}
+E_j &amp;= \frac{1}{D_j}\int_{u_\text{min}}^{u_\text{max}} \frac{1 -
+e^{-\delta u}}{\delta} du \\
+&amp;= \frac{1}{\delta} - \frac{1}{\delta^2 D_j} \left( e^{-\delta
+u_\text{min}} - e^{-\delta u_\text{max}} \right)
+\end{aligned}
+\]</span> where <span class="math inline">\(u_\text{max}\)</span> and
+<span class="math inline">\(u_\text{min}\)</span> are the maximum and
+minimum potential follow-up times for patients in that segment (<span class="math inline">\(T - S_{j-1}\)</span> and <span class="math inline">\(T - (S_{j-1} + D_j)\)</span> respectively).</p>
+<div id="group-specific-parameters" class="section level3">
+<h3>Group-specific parameters</h3>
+<p>The function supports specifying <code>dropout_rate</code> as a
+vector of length 2, corresponding to the control and treatment groups
+respectively. This allows for scenarios where the dropout rate differs
+between arms.</p>
+<p>If these parameters differ, the average exposure is calculated
+separately for each group (<span class="math inline">\(\bar{t}_1\)</span> and <span class="math inline">\(\bar{t}_2\)</span>). The variance inflation factor
+<span class="math inline">\(Q\)</span> (see below) is also calculated
+separately for each group (<span class="math inline">\(Q_1\)</span> and
+<span class="math inline">\(Q_2\)</span>).</p>
+</div>
+<div id="maximum-follow-up" class="section level3">
+<h3>Maximum follow-up</h3>
+<p>If <code>max_followup</code> (<span class="math inline">\(F\)</span>)
+is specified, the follow-up time for any individual is capped at <span class="math inline">\(F\)</span>. This creates three scenarios for a
+recruitment segment:</p>
+<ol style="list-style-type: decimal">
+<li><strong>All truncated:</strong> If <span class="math inline">\(u_\text{min} \ge F\)</span>, all patients in the
+segment have potential follow-up <span class="math inline">\(\ge
+F\)</span>, so their actual follow-up is <span class="math inline">\(F\)</span> (subject to dropout).</li>
+<li><strong>None truncated:</strong> If <span class="math inline">\(u_\text{max} \le F\)</span>, no patients reach the
+cap <span class="math inline">\(F\)</span> before the trial ends. The
+calculation is as above.</li>
+<li><strong>Partial truncation:</strong> If <span class="math inline">\(u_\text{min} &lt; F &lt; u_\text{max}\)</span>,
+patients recruited earlier in the segment are capped at <span class="math inline">\(F\)</span>, while those recruited later are
+followed until the trial end. The segment is split into two parts for
+calculation.</li>
+</ol>
+<p>The overall average exposure used for the calculation is the weighted
+average:</p>
+<p><span class="math display">\[ \bar{t} = \frac{\sum_{j=1}^J N_j
+E_j}{\sum_{j=1}^J N_j} \]</span></p>
+</div>
+<div id="variance-inflation-for-variable-follow-up" class="section level3">
+<h3>Variance inflation for variable follow-up</h3>
+<p>When follow-up times are variable (due to accrual, dropout, or
+administrative censoring), simply using the average follow-up time <span class="math inline">\(\bar{t}\)</span> in the variance formula
+underestimates the true variance of the rate estimator. This is because
+the variance of the negative binomial distribution depends on the
+exposure time in a non-linear way (<span class="math inline">\(\mathrm{Var}(Y) = \mu + k\mu^2 = \lambda t + k
+(\lambda t)^2\)</span>).</p>
+<p>To account for this, we apply a variance inflation factor <span class="math inline">\(Q\)</span> to the dispersion parameter <span class="math inline">\(k\)</span>, as derived by <span class="citation">Zhu and Lakkis (2014)</span>:</p>
+<p><span class="math display">\[ Q =
+\frac{\mathrm{E}[t^2]}{(\mathrm{E}[t])^2} \]</span></p>
+<p>The adjusted dispersion parameter used in the sample size calculation
+is <span class="math inline">\(k_{\text{adj}} = k \cdot Q\)</span>. The
+function automatically calculates <span class="math inline">\(\mathrm{E}[t]\)</span> and <span class="math inline">\(\mathrm{E}[t^2]\)</span> based on the accrual,
+dropout, and trial duration parameters. If exposure differs between
+groups, <span class="math inline">\(Q\)</span> is calculated separately
+for each group.</p>
+</div>
+<div id="event-gaps" class="section level3">
+<h3>Event gaps</h3>
+<p>In some clinical trials, there is a mandatory “dead time” or gap
+after an event during which no new events can occur (e.g., a recovery
+period). If an <code>event_gap</code> is specified, the effective
+exposure time for a subject is reduced by the time spent in these
+gaps.</p>
+<p>The function approximates the effective event rate as: <span class="math display">\[ \lambda_{\text{eff}} \approx \frac{\lambda}{1 +
+\lambda \cdot \text{gap}} \]</span> This adjusted rate is then used in
+the sample size calculations. The effective exposure time reported is
+also adjusted similarly.</p>
+</div>
+</div>
+<div id="extension-to-non-inferiority-and-super-superiority-testing" class="section level2">
+<h2>Extension to non-inferiority and super-superiority testing</h2>
+</div>
+<div id="examples" class="section level2">
+<h2>Examples</h2>
+<div id="basic-calculation-zhu2014sample" class="section level3">
+<h3>Basic calculation <span class="citation">(Zhu and Lakkis
+2014)</span></h3>
+<p>Calculate sample size for:</p>
+<ul>
+<li>Control rate <span class="math inline">\(\lambda_1 =
+0.5\)</span></li>
+<li>Treatment rate <span class="math inline">\(\lambda_2 =
+0.3\)</span></li>
+<li>Dispersion <span class="math inline">\(k = 0.1\)</span></li>
+<li>Power = 80%</li>
+<li>Alpha = 0.025 (one-sided)</li>
+<li>Accrual over 12 months</li>
+<li>Trial duration 12 months (implying exposure average of 6
+months)</li>
+</ul>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">sample_size_nbinom</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="at">lambda1 =</span> <span class="fl">0.5</span>,</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="at">lambda2 =</span> <span class="fl">0.3</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  <span class="at">dispersion =</span> <span class="fl">0.1</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>  <span class="at">power =</span> <span class="fl">0.8</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>  <span class="at">alpha =</span> <span class="fl">0.025</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  <span class="at">sided =</span> <span class="dv">1</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  <span class="at">accrual_rate =</span> <span class="dv">10</span>, <span class="co"># arbitrary, just for average exposure</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>  <span class="at">accrual_duration =</span> <span class="dv">12</span>,</span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>  <span class="at">trial_duration =</span> <span class="dv">12</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>)</span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt; Sample size for negative binomial outcome</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt; ==========================================</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt; Sample size:     n1 = 35, n2 = 35, total = 70</span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt; Expected events: 168.0 (n1: 105.0, n2: 63.0)</span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt; Power: 80%, Alpha: 0.025 (1-sided)</span></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt; Rates: control = 0.5000, treatment = 0.3000 (RR = 0.6000)</span></span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt; Dispersion: 0.1000, Avg exposure (calendar): 6.00</span></span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="co">#&gt; Accrual: 12.0, Trial duration: 12.0</span></span></code></pre></div>
+</div>
+<div id="piecewise-constant-accrual" class="section level3">
+<h3>Piecewise constant accrual</h3>
+<p>Consider a trial where recruitment ramps up:</p>
+<ul>
+<li>5 patients/month for the first 3 months</li>
+<li>10 patients/month for the next 3 months</li>
+<li>Total trial duration is 12 months</li>
+</ul>
+<p>The function automatically calculates the average exposure based on
+this accrual pattern.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">sample_size_nbinom</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>  <span class="at">lambda1 =</span> <span class="fl">0.5</span>,</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  <span class="at">lambda2 =</span> <span class="fl">0.3</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>  <span class="at">dispersion =</span> <span class="fl">0.1</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>  <span class="at">power =</span> <span class="fl">0.8</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>  <span class="at">accrual_rate =</span> <span class="fu">c</span>(<span class="dv">5</span>, <span class="dv">10</span>),</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>  <span class="at">accrual_duration =</span> <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">3</span>),</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>  <span class="at">trial_duration =</span> <span class="dv">12</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>)</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt; Sample size for negative binomial outcome</span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt; ==========================================</span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co">#&gt; Sample size:     n1 = 26, n2 = 26, total = 52</span></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt; Expected events: 176.8 (n1: 110.5, n2: 66.3)</span></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt; Power: 80%, Alpha: 0.025 (1-sided)</span></span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="co">#&gt; Rates: control = 0.5000, treatment = 0.3000 (RR = 0.6000)</span></span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="co">#&gt; Dispersion: 0.1000, Avg exposure (calendar): 8.50</span></span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a><span class="co">#&gt; Accrual: 6.0, Trial duration: 12.0</span></span></code></pre></div>
+</div>
+<div id="accrual-with-dropout-and-max-follow-up" class="section level3">
+<h3>Accrual with dropout and max follow-up</h3>
+<p>Same design as above, but with a 5% dropout rate per unit time and a
+maximum follow-up of 6 months.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">sample_size_nbinom</span>(</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="at">lambda1 =</span> <span class="fl">0.5</span>,</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="at">lambda2 =</span> <span class="fl">0.3</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>  <span class="at">dispersion =</span> <span class="fl">0.1</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>  <span class="at">power =</span> <span class="fl">0.8</span>,</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>  <span class="at">accrual_rate =</span> <span class="fu">c</span>(<span class="dv">5</span>, <span class="dv">10</span>),</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>  <span class="at">accrual_duration =</span> <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">3</span>),</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>  <span class="at">trial_duration =</span> <span class="dv">12</span>,</span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>  <span class="at">dropout_rate =</span> <span class="fl">0.05</span>,</span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>  <span class="at">max_followup =</span> <span class="dv">6</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>)</span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="co">#&gt; Sample size for negative binomial outcome</span></span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="co">#&gt; ==========================================</span></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="co">#&gt; Sample size:     n1 = 38, n2 = 38, total = 76</span></span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="co">#&gt; Expected events: 157.6 (n1: 98.5, n2: 59.1)</span></span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a><span class="co">#&gt; Power: 80%, Alpha: 0.025 (1-sided)</span></span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a><span class="co">#&gt; Rates: control = 0.5000, treatment = 0.3000 (RR = 0.6000)</span></span>
+<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a><span class="co">#&gt; Dispersion: 0.1000, Avg exposure (calendar): 5.18</span></span>
+<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a><span class="co">#&gt; Dropout rate: 0.0500</span></span>
+<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a><span class="co">#&gt; Accrual: 6.0, Trial duration: 12.0</span></span>
+<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a><span class="co">#&gt; Max follow-up: 6.0</span></span></code></pre></div>
+</div>
+<div id="group-specific-dropout-rates" class="section level3">
+<h3>Group-specific dropout rates</h3>
+<p>Suppose the control group has a higher dropout rate (10%) than the
+treatment group (5%).</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">sample_size_nbinom</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  <span class="at">lambda1 =</span> <span class="fl">0.5</span>,</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="at">lambda2 =</span> <span class="fl">0.3</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  <span class="at">dispersion =</span> <span class="fl">0.1</span>,</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>  <span class="at">power =</span> <span class="fl">0.8</span>,</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  <span class="at">accrual_rate =</span> <span class="fu">c</span>(<span class="dv">5</span>, <span class="dv">10</span>),</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>  <span class="at">accrual_duration =</span> <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">3</span>),</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>  <span class="at">trial_duration =</span> <span class="dv">12</span>,</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>  <span class="at">dropout_rate =</span> <span class="fu">c</span>(<span class="fl">0.10</span>, <span class="fl">0.05</span>), <span class="co"># Control, Treatment</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>  <span class="at">max_followup =</span> <span class="dv">6</span></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>)</span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co">#&gt; Sample size for negative binomial outcome</span></span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="co">#&gt; ==========================================</span></span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="co">#&gt; Sample size:     n1 = 40, n2 = 40, total = 80</span></span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a><span class="co">#&gt; Expected events: 152.4 (n1: 90.2, n2: 62.2)</span></span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a><span class="co">#&gt; Power: 80%, Alpha: 0.025 (1-sided)</span></span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a><span class="co">#&gt; Rates: control = 0.5000, treatment = 0.3000 (RR = 0.6000)</span></span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a><span class="co">#&gt; Dispersion: 0.1000, Avg exposure (calendar): 4.51 (n1), 5.18 (n2)</span></span>
+<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a><span class="co">#&gt; Dropout rate: 0.1000 (n1), 0.0500 (n2)</span></span>
+<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a><span class="co">#&gt; Accrual: 6.0, Trial duration: 12.0</span></span>
+<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a><span class="co">#&gt; Max follow-up: 6.0</span></span></code></pre></div>
+</div>
+<div id="calculating-power-for-fixed-design" class="section level3">
+<h3>Calculating power for fixed design</h3>
+<p>Using the accrual rates and design from the previous example, suppose
+we want to calculate the power if the treatment effect is smaller (<span class="math inline">\(\lambda_2 = 0.4\)</span> instead of <span class="math inline">\(0.3\)</span>). We use the
+<code>accrual_rate</code> computed in the previous step.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co"># Store the result from the previous calculation</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>design_result <span class="ot">&lt;-</span> <span class="fu">sample_size_nbinom</span>(</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="at">lambda1 =</span> <span class="fl">0.5</span>,</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="at">lambda2 =</span> <span class="fl">0.3</span>,</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>  <span class="at">dispersion =</span> <span class="fl">0.1</span>,</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>  <span class="at">power =</span> <span class="fl">0.8</span>,</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>  <span class="at">accrual_rate =</span> <span class="fu">c</span>(<span class="dv">5</span>, <span class="dv">10</span>),</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>  <span class="at">accrual_duration =</span> <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">3</span>),</span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>  <span class="at">trial_duration =</span> <span class="dv">12</span>,</span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>  <span class="at">dropout_rate =</span> <span class="fl">0.05</span>,</span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>  <span class="at">max_followup =</span> <span class="dv">6</span></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a>)</span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="co"># Use the computed accrual rates to calculate power for a smaller effect size</span></span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="fu">sample_size_nbinom</span>(</span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a>  <span class="at">lambda1 =</span> <span class="fl">0.5</span>,</span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a>  <span class="at">lambda2 =</span> <span class="fl">0.4</span>, <span class="co"># Smaller effect size</span></span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a>  <span class="at">dispersion =</span> <span class="fl">0.1</span>,</span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a>  <span class="at">power =</span> <span class="cn">NULL</span>, <span class="co"># Request power calculation</span></span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a>  <span class="at">accrual_rate =</span> design_result<span class="sc">$</span>accrual_rate, <span class="co"># Use computed rates</span></span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a>  <span class="at">accrual_duration =</span> <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">3</span>),</span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a>  <span class="at">trial_duration =</span> <span class="dv">12</span>,</span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a>  <span class="at">dropout_rate =</span> <span class="fl">0.05</span>,</span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a>  <span class="at">max_followup =</span> <span class="dv">6</span></span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a>)</span>
+<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a><span class="co">#&gt; Sample size for negative binomial outcome</span></span>
+<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a><span class="co">#&gt; ==========================================</span></span>
+<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a><span class="co">#&gt; Sample size:     n1 = 38, n2 = 38, total = 76</span></span>
+<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a><span class="co">#&gt; Expected events: 177.3 (n1: 98.5, n2: 78.8)</span></span>
+<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a><span class="co">#&gt; Power: 26%, Alpha: 0.025 (1-sided)</span></span>
+<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a><span class="co">#&gt; Rates: control = 0.5000, treatment = 0.4000 (RR = 0.8000)</span></span>
+<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a><span class="co">#&gt; Dispersion: 0.1000, Avg exposure (calendar): 5.18</span></span>
+<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a><span class="co">#&gt; Dropout rate: 0.0500</span></span>
+<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a><span class="co">#&gt; Accrual: 6.0, Trial duration: 12.0</span></span>
+<span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a><span class="co">#&gt; Max follow-up: 6.0</span></span></code></pre></div>
+</div>
+<div id="unequal-allocation" class="section level3">
+<h3>Unequal allocation</h3>
+<p>Sample size with a 2:1 allocation ratio (<span class="math inline">\(n_2 = 2 n_1\)</span>).</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="fu">sample_size_nbinom</span>(</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>  <span class="at">lambda1 =</span> <span class="fl">0.5</span>,</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>  <span class="at">lambda2 =</span> <span class="fl">0.3</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>  <span class="at">dispersion =</span> <span class="fl">0.1</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>  <span class="at">ratio =</span> <span class="dv">2</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>  <span class="at">accrual_rate =</span> <span class="dv">10</span>,</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>  <span class="at">accrual_duration =</span> <span class="dv">12</span>,</span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>  <span class="at">trial_duration =</span> <span class="dv">12</span></span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>)</span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a><span class="co">#&gt; Sample size for negative binomial outcome</span></span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="co">#&gt; ==========================================</span></span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a><span class="co">#&gt; Sample size:     n1 = 40, n2 = 80, total = 120</span></span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a><span class="co">#&gt; Expected events: 264.0 (n1: 120.0, n2: 144.0)</span></span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a><span class="co">#&gt; Power: 95%, Alpha: 0.025 (1-sided)</span></span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a><span class="co">#&gt; Rates: control = 0.5000, treatment = 0.3000 (RR = 0.6000)</span></span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a><span class="co">#&gt; Dispersion: 0.1000, Avg exposure (calendar): 6.00</span></span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a><span class="co">#&gt; Accrual: 12.0, Trial duration: 12.0</span></span></code></pre></div>
+</div>
+</div>
+<div id="accounting-for-event-gaps" class="section level2">
+<h2>Accounting for event gaps</h2>
+<p>In some recurrent event trials, there may be a mandatory “gap” period
+after each event during which no new events can be recorded (e.g., a
+recovery period or administrative window). This effectively reduces the
+time at risk.</p>
+<p>If an <code>event_gap</code> (<span class="math inline">\(g\)</span>)
+is specified, the function adjusts the calculation as follows:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Effective rates</strong>: The event rates are adjusted to
+<span class="math inline">\(\lambda^* = \lambda / (1 + \lambda
+g)\)</span> for the sample size calculation (Zhu and Lakkis
+method).</li>
+<li><strong>At-risk exposure</strong>: The function reports the “average
+at-risk exposure” <span class="math inline">\(\mathrm{E}_{\text{risk}} =
+\mathrm{E}_{\text{cal}} / (1 + \lambda g)\)</span> alongside the
+standard calendar exposure. This provides transparency on the actual
+time subjects are at risk for events.</li>
+</ol>
+<p>Since the gap reduction depends on the event rate (<span class="math inline">\(\lambda\)</span>), the at-risk exposure differs
+between treatment groups if their rates differ, even if the calendar
+exposure is the same. This is a key reason why average exposure may
+differ between groups in the output.</p>
+<div id="example-with-event-gap" class="section level3">
+<h3>Example with event gap</h3>
+<p>Calculate sample size assuming a 30-day gap after each event (approx
+0.082 years). Note how the <code>exposure_at_risk</code> differs between
+groups because the group with the higher event rate (<span class="math inline">\(\lambda_1 = 2.0\)</span>) spends more time in the
+“gap” period than the group with the lower rate (<span class="math inline">\(\lambda_2 = 1.0\)</span>).</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="fu">sample_size_nbinom</span>(</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>  <span class="at">lambda1 =</span> <span class="fl">2.0</span>,</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>  <span class="at">lambda2 =</span> <span class="fl">1.0</span>,</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>  <span class="at">dispersion =</span> <span class="fl">0.1</span>,</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>  <span class="at">power =</span> <span class="fl">0.8</span>,</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>  <span class="at">accrual_rate =</span> <span class="dv">10</span>,</span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>  <span class="at">accrual_duration =</span> <span class="dv">12</span>,</span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>  <span class="at">trial_duration =</span> <span class="dv">12</span>,</span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>  <span class="at">event_gap =</span> <span class="dv">30</span> <span class="sc">/</span> <span class="fl">365.25</span></span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a>)</span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a><span class="co">#&gt; Sample size for negative binomial outcome</span></span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a><span class="co">#&gt; ==========================================</span></span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a><span class="co">#&gt; Sample size:     n1 = 9, n2 = 9, total = 18</span></span>
+<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a><span class="co">#&gt; Expected events: 142.7 (n1: 92.8, n2: 49.9)</span></span>
+<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a><span class="co">#&gt; Power: 80%, Alpha: 0.025 (1-sided)</span></span>
+<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a><span class="co">#&gt; Rates: control = 2.0000, treatment = 1.0000 (RR = 0.5000)</span></span>
+<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a><span class="co">#&gt; Dispersion: 0.1000, Avg exposure (calendar): 6.00</span></span>
+<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a><span class="co">#&gt; Avg exposure (at-risk): n1 = 5.15, n2 = 5.54</span></span>
+<span id="cb9-20"><a href="#cb9-20" tabindex="-1"></a><span class="co">#&gt; Event gap: 0.08</span></span>
+<span id="cb9-21"><a href="#cb9-21" tabindex="-1"></a><span class="co">#&gt; Accrual: 12.0, Trial duration: 12.0</span></span></code></pre></div>
+<p>In this example, even though the calendar time is the same for both
+groups, the effective at-risk exposure is lower for Group 1 because they
+have more events and thus more “gap” time.</p>
+</div>
+</div>
+<div id="references" class="section level2 unnumbered">
+<h2 class="unnumbered">References</h2>
+<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
+<div id="ref-friede2010blinded" class="csl-entry">
+Friede, T, and H Schmidli. 2010. <span>“Blinded Sample Size Reestimation
+with Negative Binomial Counts in Superiority and Non-Inferiority
+Trials.”</span> <em>Methods of Information in Medicine</em> 49 (06):
+618–24.
+</div>
+<div id="ref-mutze2019group" class="csl-entry">
+Mütze, Tobias, Ekkehard Glimm, Heinz Schmidli, and Tim Friede. 2019.
+<span>“Group Sequential Designs for Negative Binomial Outcomes.”</span>
+<em>Statistical Methods in Medical Research</em> 28 (8): 2326–47.
+</div>
+<div id="ref-zhu2014sample" class="csl-entry">
+Zhu, Haiyuan, and Hassan Lakkis. 2014. <span>“Sample Size Calculation
+for Comparing Two Negative Binomial Rates.”</span> <em>Statistics in
+Medicine</em> 33 (3): 376–87.
+</div>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
