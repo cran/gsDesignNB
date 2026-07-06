@@ -1,3 +1,156 @@
+# gsDesignNB 0.3.2 (development)
+
+## Score-test sizing and inference guidance
+
+- Expanded the paper, sample-size vignette, and score-vs-Wald simulation
+  vignette with recommendations for when the Zhu-Lakkis / Friede-Schmidli /
+  Mutze Wald sample-size formula is appropriate and when to use score-test
+  sizing with separate null and alternative variance factors.
+- Added an `ai-skills` vignette demonstrating how the agent skills under
+  `.agents/skills/` can guide package-native score-test and simulation
+  workflows without replacing statistical review.
+- Added a published sample-size examples vignette showing how the
+  package-specific AI skill translates literature and protocol descriptions
+  into transparent `sample_size_nbinom()` calls, including dropout, event-gap,
+  non-inferiority, and group sequential parameterization checks.
+- Refined score-test recommendations to distinguish the final analysis test
+  from the sample-size formula: Wald/Zhu-Lakkis sizing remains a useful
+  practical baseline and may provide a power margin when paired with the score
+  test in fixed-design superiority settings, while SSR designs should verify
+  any starting-size margin inside the planned adaptation rule.
+- Added a targeted SSR starting-size sensitivity cache comparing Wald- and
+  score-sized starting designs under the score final test in a low-event stress
+  setting. Both starts preserved near-nominal score-test Type I error, and the
+  larger Wald-sized start did not produce a clear SSR power advantage.
+- Documented the cached score-vs-Wald simulation results: the Wald test was
+  mildly anti-conservative in several finite-sample scenarios, while the score
+  test preserved Type I error more conservatively and should be paired with
+  simulation-based power checks.
+- Corrected the reported `variance_null` field from `sample_size_nbinom()` so
+  it is on the same final-analysis scale as `variance`; the score sample-size
+  calculation itself was already using the null variance factor correctly.
+
+## Group sequential simulation vignette
+
+- Corrected the group sequential simulation vignette and cached results so that
+  simulations use the rounded final group sequential sample size, monthly
+  dropout hazard, and helper functions for boundary checking and summary.
+- `toInteger.gsNB()` now preserves calendar-time enrollment quantities at
+  interim analyses and recomputes expected events, exposures, and information
+  after rounding the final sample size.
+- `toInteger.gsNB()` now preserves the shape of piecewise accrual schedules
+  when rescaling calendar-time designs after final sample-size rounding.
+- `gsNBCalendar()`, `update_gsNB()`, and simulation boundary checks now support
+  harm-bound group sequential designs available in `gsDesign` 3.10.0
+  (`test.type = 7` or `8`, `sfharm`, `sfharmparam`, and `testHarm`).
+- `summarize_gs_sim()` now reports optional sample-size and exposure summaries
+  when available and uses finite trimmed means for information estimates.
+- Updated SSR simulation reporting in the manuscript and SSR simulation article
+  to use the production score-test cache: 3,600 replicates per power scenario,
+  20,000 per RR = 1 main-grid scenario, 1,000 per RR > 1 scenario, and 20,000
+  per dispersion/test-statistic cell for the non-binding Type I tables.
+- Replaced the CRAN-bundled SSR trial-level simulation cache with compact
+  precomputed summaries for tables and figures, while leaving full raw
+  simulation caches available for local development or external archival.
+- Converted the score-vs-Wald simulation article from interactive widget output
+  to static vignette tables and figures backed by compact precomputed
+  summaries, reducing the CRAN package size while leaving the full simulation
+  cache available outside the CRAN build.
+- Updated the SSR simulation study to compare Wald and score tests at the same
+  nominal one-sided alpha of 0.025, and aligned the SSR power simulations with
+  the score final-analysis recommendation.
+- Added a checkpointed production generator for the SSR score-test cache so the
+  long-running power and Type I simulations can be resumed from saved chunks.
+- Updated the blinded-information diagnostics article to distinguish historical
+  raw ML pathologies from the current MoM fallback behavior.
+
+## Missing data and imputation documentation
+
+- Added documentation clarifying that the primary recurrent-event analysis is an
+  observed-exposure negative binomial likelihood analysis. Under ignorable
+  censoring / MAR assumptions, partially followed subjects contribute their
+  observed events and exposure, and multiple imputation is not required simply
+  because follow-up is censored.
+- Expanded MNAR sensitivity-analysis guidance for recurrent-event endpoints,
+  including the need to preserve censoring reason and planned remaining follow-up
+  before post-dropout outcomes can be imputed.
+- Added Keene, Roger, Hartley, and Kenward (2014) as the recurrent-event
+  controlled-imputation reference for de facto / reference-based sensitivity
+  analyses, and aligned the manuscript, slides, and simulation vignette around
+  that framing.
+- Updated the paper and slide materials to cite package articles as executable
+  supplementary material for the fuller simulation grids and reporting.
+
+## Manuscript
+
+- Converted the paper to the Quarto Journal of Statistical Software template,
+  added a semi-real recurrent-event group sequential design example with tables
+  and a figure, added formal R package citations, and simplified the Jensen
+  correction grid table so the formula-heavy entries no longer break the PDF.
+
+# gsDesignNB 0.3.1
+
+## Robust NB fallback: method-of-moments replaces Poisson under genuine overdispersion
+
+- `mutze_test()`, `calculate_blinded_info()`, and `unblinded_ssr()` now fall
+  back to method-of-moments (MoM) estimation via `estimate_nb_mom()` when the
+  maximum likelihood negative binomial fit does not converge or returns an
+  extreme-overdispersion shape estimate. Previously, the Poisson fallback was
+  used in both "near-Poisson" and "extreme-overdispersion" regimes; the
+  latter is anti-conservative because the Poisson variance underestimates the
+  true NB variance under genuine overdispersion. The MoM fallback computes
+  the Wald standard error from the observed Fisher information formula
+  $\mathcal{I} = 1/(1/W_1 + 1/W_2)$ with
+  $W_g = \sum_i \mu_{g,i}/(1 + \hat{k}\mu_{g,i})$, preserving the NB variance
+  structure without requiring ML convergence.
+- `mutze_test()` gains a `mom_threshold` argument (default `20`, corresponding
+  to $\hat{k} > 20$) that controls when the MoM branch is triggered. The
+  existing `poisson_threshold` default is reduced from `1000` to `50`
+  ($\hat{k} < 0.02$) since NB and Poisson Wald standard errors are
+  numerically indistinguishable at that point.
+- All three functions now return an additional `fallback` element in their
+  output (`"ml"`, `"mom"`, or `"poisson"`) so that downstream simulation
+  engines can record which estimator was used at each interim.
+
+# gsDesignNB 0.3.0
+
+## Sample size methodology deep dive (#14)
+
+### Jensen's inequality correction for event gaps
+
+- Applied a second-order Taylor correction to the effective rate formula when
+  both dispersion ($k > 0$) and event gap ($g > 0$) are present. The naive
+  formula $\lambda/(1+\lambda g)$ overestimates the population-level effective
+  rate due to Jensen's inequality (subject-level frailty makes $f(x)=x/(1+xg)$
+  concave). The corrected formula is
+  $\lambda_{\text{eff}} \approx \frac{\lambda}{1+\lambda g}(1 - k\lambda g/(1+\lambda g)^2)$.
+- Correction applied in both `sample_size_nbinom()` and `compute_info_at_time()`.
+- Simulation study across multiple scenarios (10,000 replicates each) confirms
+  the corrected design maintains nominal or conservative power, while the naive
+  formula increasingly underpowers as $k$ and $g$ grow.
+
+### Documentation improvements
+
+- Restructured the `sample-size-nbinom` vignette with a consistent notation
+  table and comparison of Zhu-Lakkis, Friede-Schmidli, and Mutze et al. methods.
+- Expanded average exposure derivation covering no-dropout, exponential dropout,
+  max follow-up truncation, the $Q$ variance inflation factor, and event gaps.
+- Added a statistical information section covering per-subject Fisher
+  information, total information, blinded vs unblinded estimation (ML and MoM),
+  and the connection to sample size.
+- Added simulation verification of average exposure in the vignette.
+- Improved roxygen2 documentation for `sample_size_nbinom()`,
+  `calculate_blinded_info()`, and `compute_info_at_time()` with `@details`
+  sections, consistent notation, and cross-references.
+- Updated `verification-simulation` vignette with a scenario sweep table and
+  a discussion of why the correction is preferred despite partial cancellation
+  with model-based SE bias.
+
+### Other
+
+- Added DOIs to bibliography entries; added Schneider et al. (2013) reference.
+- Switched pkgdown math rendering from MathJax (CDN) to KaTeX (bundled).
+
 # gsDesignNB 0.2.6
 
 - First CRAN release.

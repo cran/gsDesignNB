@@ -127,7 +127,7 @@ cat("  Lambda (Rate):", round(mom_res$lambda, 4), "\n")
 cat("  Dispersion (k):", round(mom_res$dispersion, 4), "\n")
 
 ## ----load-data-2--------------------------------------------------------------
-# Load the extreme high dataset (reproduced from simulation 630)
+# Load the historical extreme-high dataset
 data_path_2 <- system.file("extdata", "extreme_high_dataset.rds", package = "gsDesignNB")
 if (data_path_2 == "") {
   data_path_2 <- file.path("..", "inst", "extdata", "extreme_high_dataset.rds")

@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Multiple imputation for longitudinal negative binomial counts</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Multiple imputation for longitudinal
+negative binomial counts</h1>
+
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>Longitudinal clinical trials with recurrent-event count endpoints
+(e.g., MRI lesion counts in multiple sclerosis, exacerbation counts in
+COPD) routinely encounter missing data due to intercurrent events (ICEs)
+such as premature treatment discontinuation, adverse events requiring
+rescue therapy, or death. Proper handling of these missing values
+requires a principled strategy that reflects the scientific question—the
+<em>estimand</em>—as defined by the ICH E9(R1) addendum.</p>
+<p>The <code>gsDesignNB</code> package provides three imputation
+strategies for longitudinal negative binomial count data:</p>
+<table>
+<colgroup>
+<col width="33%" />
+<col width="36%" />
+<col width="30%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Mechanism</th>
+<th align="left">Flag value</th>
+<th align="left">Strategy</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Missing at Random</td>
+<td align="left"><code>&quot;MAR&quot;</code></td>
+<td align="left">GLMM-based imputation with subject BLUPs</td>
+</tr>
+<tr class="even">
+<td align="left">Missing Not at Random (non-reference arm)</td>
+<td align="left"><code>&quot;MNAR&quot;</code></td>
+<td align="left">Reference-based (copy-reference) imputation</td>
+</tr>
+<tr class="odd">
+<td align="left">Intercurrent event — composite</td>
+<td align="left"><code>&quot;Comp&quot;</code></td>
+<td align="left">Baseline count carried forward</td>
+</tr>
+</tbody>
+</table>
+<p>These mirror the SAS implementation using <code>PROC GLIMMIX</code>
+with <code>dist=negbin link=log</code> and <code>PROC PLM</code> for
+counterfactual predictions.</p>
+</div>
+<div id="statistical-background" class="section level2">
+<h2>Statistical background</h2>
+<div id="negative-binomial-count-model" class="section level3">
+<h3>Negative binomial count model</h3>
+<p>For subject <span class="math inline">\(i\)</span> at visit <span class="math inline">\(t\)</span>, let <span class="math inline">\(Y_{it}\)</span> denote the count endpoint. The
+negative binomial (NB) model used throughout <strong>gsDesignNB</strong>
+is the Gamma–Poisson mixture:</p>
+<p><span class="math display">\[
+\Lambda_i \sim \text{Gamma}\!\left(\frac{1}{k},\; \mu_i k\right),
+\qquad
+Y_{it} \mid \Lambda_i \sim \text{Poisson}(\Lambda_i).
+\]</span></p>
+<p>Marginally, <span class="math inline">\(Y_{it}\)</span> has mean
+<span class="math inline">\(\mu_i\)</span> and variance <span class="math inline">\(\text{Var}(Y_{it}) = \mu_i + k\,\mu_i^2\)</span>,
+where <span class="math inline">\(k \geq 0\)</span> is the dispersion
+parameter. In the longitudinal GLMM, the mean is modelled as</p>
+<p><span class="math display">\[
+\log(\mu_{it}) = \mathbf{x}_{it}^{\top}\boldsymbol{\beta} + b_i,
+\]</span></p>
+<p>where <span class="math inline">\(\mathbf{x}_{it}\)</span> contains
+fixed-effect covariates (treatment, visit, baseline, stratification
+factors) and <span class="math inline">\(b_i\)</span> is a subject-level
+random intercept. The model is fitted via [glmmTMB::glmmTMB()] with
+<code>family = nbinom2(link = &quot;log&quot;)</code>.</p>
+</div>
+<div id="imputation-draw" class="section level3">
+<h3>Imputation draw</h3>
+<p>All three model-based strategies draw imputed counts from the same
+Gamma–Poisson compound:</p>
+<p><span class="math display">\[
+\lambda_i^{(m)} \sim \text{Gamma}\!\left(\frac{1}{k},\; \hat\mu_i \cdot
+k\right),
+\qquad
+Y_i^{(m)} \mid \lambda_i^{(m)} \sim
+\text{Poisson}\!\left(\lambda_i^{(m)}\right).
+\]</span></p>
+<p>The strategies differ only in how <span class="math inline">\(\hat\mu_i\)</span> is determined:</p>
+<ul>
+<li><strong>MAR</strong>: <span class="math inline">\(\hat\mu_i =
+\hat\mu_i^{\text{BLUP}}\)</span> — predicted mean including subject
+random effects.</li>
+<li><strong>MNAR reference-based</strong>: <span class="math inline">\(\hat\mu_i = \hat\mu_i^{\text{FE, ref}} \times
+\dfrac{\hat\mu_i^{\text{BLUP}}}{\hat\mu_i^{\text{FE}}}\)</span> —
+counterfactual mean under the reference treatment, adjusted by each
+subject’s estimated random effect. The ratio <span class="math inline">\(\hat\mu_i^{\text{BLUP}} /
+\hat\mu_i^{\text{FE}}\)</span> is the multiplicative random-effect “BLUP
+multiplier” computed from the original treatment assignment.</li>
+<li><strong>Composite</strong>: <span class="math inline">\(Y_i^{(m)} =
+y_{i,0}\)</span> (baseline value), no model draw.</li>
+</ul>
+</div>
+<div id="bootstrapmi-combination" class="section level3">
+<h3>Bootstrap–MI combination</h3>
+<p>When <code>n_boot &gt; 1</code>, subjects are resampled with
+replacement within strata before each GLMM fit. This <em>boot-MI</em>
+approach propagates both imputation uncertainty and model-fitting
+uncertainty into the final variance estimate without requiring Rubin’s
+combining rules. When <code>n_boot = 1</code>, standard MI is performed
+and Rubin’s rules should be applied when pooling estimates across the
+<code>n_imp</code> imputed datasets.</p>
+</div>
+</div>
+<div id="worked-example" class="section level2">
+<h2>Worked example</h2>
+<div id="simulating-longitudinal-count-data" class="section level3">
+<h3>Simulating longitudinal count data</h3>
+<p>We simulate a 3-arm trial (placebo and two active doses) with 4
+post-baseline visits, negative binomial counts (dispersion <span class="math inline">\(k = 0.5\)</span>), and a single binary
+stratification factor.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2025</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>n_subj   <span class="ot">&lt;-</span> <span class="dv">90</span><span class="dt">L</span>   <span class="co"># 30 per arm</span></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>n_visit  <span class="ot">&lt;-</span> <span class="dv">4</span><span class="dt">L</span></span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>k_true   <span class="ot">&lt;-</span> <span class="fl">0.5</span>   <span class="co"># dispersion</span></span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>lambda   <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="at">placebo =</span> <span class="fl">1.8</span>, <span class="at">low =</span> <span class="fl">1.1</span>, <span class="at">high =</span> <span class="fl">0.7</span>)   <span class="co"># mean counts/visit</span></span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>trt_labels <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">&quot;placebo&quot;</span>, <span class="st">&quot;low&quot;</span>, <span class="st">&quot;high&quot;</span>), <span class="at">each =</span> n_subj <span class="sc">/</span> <span class="dv">3</span><span class="dt">L</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>strat      <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="fu">c</span>(<span class="dv">0</span><span class="dt">L</span>, <span class="dv">1</span><span class="dt">L</span>), n_subj, <span class="at">replace =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>baseline   <span class="ot">&lt;-</span> <span class="fu">rnbinom</span>(n_subj, <span class="at">mu =</span> <span class="fl">2.5</span>, <span class="at">size =</span> <span class="dv">1</span> <span class="sc">/</span> k_true)</span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a>id         <span class="ot">&lt;-</span> <span class="fu">seq_len</span>(n_subj)</span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a><span class="co"># Build long-format data (all visits complete at first)</span></span>
+<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a>long_data <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(<span class="fu">seq_len</span>(n_subj), <span class="cf">function</span>(i) {</span>
+<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a>  mu_i <span class="ot">&lt;-</span> lambda[trt_labels[i]] <span class="sc">*</span> <span class="fu">exp</span>(<span class="fl">0.15</span> <span class="sc">*</span> strat[i] <span class="sc">+</span> <span class="fl">0.05</span> <span class="sc">*</span> baseline[i])</span>
+<span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a>  <span class="fu">data.frame</span>(</span>
+<span id="cb1-17"><a href="#cb1-17" tabindex="-1"></a>    <span class="at">id       =</span> i,</span>
+<span id="cb1-18"><a href="#cb1-18" tabindex="-1"></a>    <span class="at">visit    =</span> <span class="fu">seq_len</span>(n_visit),</span>
+<span id="cb1-19"><a href="#cb1-19" tabindex="-1"></a>    <span class="at">trt      =</span> trt_labels[i],</span>
+<span id="cb1-20"><a href="#cb1-20" tabindex="-1"></a>    <span class="at">strat1   =</span> strat[i],</span>
+<span id="cb1-21"><a href="#cb1-21" tabindex="-1"></a>    <span class="at">baseline =</span> baseline[i],</span>
+<span id="cb1-22"><a href="#cb1-22" tabindex="-1"></a>    <span class="at">count    =</span> <span class="fu">rnbinom</span>(n_visit, <span class="at">mu =</span> mu_i, <span class="at">size =</span> <span class="dv">1</span> <span class="sc">/</span> k_true),</span>
+<span id="cb1-23"><a href="#cb1-23" tabindex="-1"></a>    <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb1-24"><a href="#cb1-24" tabindex="-1"></a>  )</span>
+<span id="cb1-25"><a href="#cb1-25" tabindex="-1"></a>}))</span>
+<span id="cb1-26"><a href="#cb1-26" tabindex="-1"></a></span>
+<span id="cb1-27"><a href="#cb1-27" tabindex="-1"></a><span class="co"># Sort</span></span>
+<span id="cb1-28"><a href="#cb1-28" tabindex="-1"></a>long_data <span class="ot">&lt;-</span> long_data[<span class="fu">order</span>(long_data<span class="sc">$</span>id, long_data<span class="sc">$</span>visit), ]</span>
+<span id="cb1-29"><a href="#cb1-29" tabindex="-1"></a><span class="fu">rownames</span>(long_data) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb1-30"><a href="#cb1-30" tabindex="-1"></a><span class="fu">str</span>(long_data)</span>
+<span id="cb1-31"><a href="#cb1-31" tabindex="-1"></a><span class="co">#&gt; &#39;data.frame&#39;:    360 obs. of  6 variables:</span></span>
+<span id="cb1-32"><a href="#cb1-32" tabindex="-1"></a><span class="co">#&gt;  $ id      : int  1 1 1 1 2 2 2 2 3 3 ...</span></span>
+<span id="cb1-33"><a href="#cb1-33" tabindex="-1"></a><span class="co">#&gt;  $ visit   : int  1 2 3 4 1 2 3 4 1 2 ...</span></span>
+<span id="cb1-34"><a href="#cb1-34" tabindex="-1"></a><span class="co">#&gt;  $ trt     : chr  &quot;placebo&quot; &quot;placebo&quot; &quot;placebo&quot; &quot;placebo&quot; ...</span></span>
+<span id="cb1-35"><a href="#cb1-35" tabindex="-1"></a><span class="co">#&gt;  $ strat1  : int  0 0 0 0 1 1 1 1 1 1 ...</span></span>
+<span id="cb1-36"><a href="#cb1-36" tabindex="-1"></a><span class="co">#&gt;  $ baseline: num  3 3 3 3 5 5 5 5 4 4 ...</span></span>
+<span id="cb1-37"><a href="#cb1-37" tabindex="-1"></a><span class="co">#&gt;  $ count   : num  1 2 3 2 1 6 4 4 3 1 ...</span></span></code></pre></div>
+</div>
+<div id="introducing-missing-data-by-mechanism" class="section level3">
+<h3>Introducing missing data by mechanism</h3>
+<p>We introduce three types of missing data to mirror a realistic
+trial:</p>
+<ul>
+<li><strong>MAR</strong>: A random subset of subjects miss visits 3–4
+due to non-disease reasons (e.g., logistical dropout). The probability
+of dropout is unrelated to unobserved counts given the observed history
+— a plausible MAR assumption.</li>
+<li><strong>MNAR</strong>: A subset of active-arm subjects discontinue
+at visit 2 due to adverse events likely linked to drug exposure. Their
+later counts are expected to be higher (on the reference arm trajectory)
+than for subjects who remained on treatment — a MNAR mechanism for which
+reference-based imputation is appropriate.</li>
+<li><strong>Composite ICE</strong>: A small number of subjects in any
+arm experience a severe disease worsening event (e.g., hospitalisation)
+that leads to treatment discontinuation. The composite estimand treats
+this event as part of the outcome; missing post-event counts are filled
+with the baseline count.</li>
+</ul>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>long_data<span class="sc">$</span>miss_flag <span class="ot">&lt;-</span> <span class="cn">NA_character_</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="co"># --- MAR: ~15% of subjects drop out from visit 3 onward ---</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>mar_subjects <span class="ot">&lt;-</span> <span class="fu">sample</span>(id, <span class="at">size =</span> <span class="fu">round</span>(<span class="fl">0.15</span> <span class="sc">*</span> n_subj))</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>long_data<span class="sc">$</span>miss_flag[</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>  long_data<span class="sc">$</span>id <span class="sc">%in%</span> mar_subjects <span class="sc">&amp;</span> long_data<span class="sc">$</span>visit <span class="sc">&gt;=</span> <span class="dv">3</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>] <span class="ot">&lt;-</span> <span class="st">&quot;MAR&quot;</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="co"># --- MNAR: ~10% of active-arm subjects withdraw at visit 2 ---</span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>active_ids  <span class="ot">&lt;-</span> id[trt_labels <span class="sc">!=</span> <span class="st">&quot;placebo&quot;</span>]</span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>mnar_subjects <span class="ot">&lt;-</span> <span class="fu">sample</span>(active_ids, <span class="at">size =</span> <span class="fu">round</span>(<span class="fl">0.10</span> <span class="sc">*</span> n_subj))</span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>long_data<span class="sc">$</span>miss_flag[</span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>  long_data<span class="sc">$</span>id <span class="sc">%in%</span> mnar_subjects <span class="sc">&amp;</span> long_data<span class="sc">$</span>visit <span class="sc">&gt;=</span> <span class="dv">2</span></span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a>] <span class="ot">&lt;-</span> <span class="st">&quot;MNAR&quot;</span></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a></span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a><span class="co"># --- Composite ICE: ~5% of all subjects, post-event visits ---</span></span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a>comp_subjects <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="fu">setdiff</span>(id, <span class="fu">c</span>(mar_subjects, mnar_subjects)),</span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a>                        <span class="at">size =</span> <span class="fu">round</span>(<span class="fl">0.05</span> <span class="sc">*</span> n_subj))</span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a>comp_ice_visit <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="dv">2</span><span class="dt">L</span><span class="sc">:</span><span class="dv">4</span><span class="dt">L</span>, <span class="fu">length</span>(comp_subjects), <span class="at">replace =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a><span class="cf">for</span> (ci <span class="cf">in</span> <span class="fu">seq_along</span>(comp_subjects)) {</span>
+<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a>  long_data<span class="sc">$</span>miss_flag[</span>
+<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a>    long_data<span class="sc">$</span>id <span class="sc">==</span> comp_subjects[ci] <span class="sc">&amp;</span></span>
+<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a>    long_data<span class="sc">$</span>visit <span class="sc">&gt;=</span> comp_ice_visit[ci]</span>
+<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a>  ] <span class="ot">&lt;-</span> <span class="st">&quot;Comp&quot;</span></span>
+<span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a>}</span>
+<span id="cb2-26"><a href="#cb2-26" tabindex="-1"></a></span>
+<span id="cb2-27"><a href="#cb2-27" tabindex="-1"></a><span class="co"># Set the outcome to NA for flagged rows (simulate non-collection)</span></span>
+<span id="cb2-28"><a href="#cb2-28" tabindex="-1"></a>long_data<span class="sc">$</span>count[<span class="sc">!</span><span class="fu">is.na</span>(long_data<span class="sc">$</span>miss_flag)] <span class="ot">&lt;-</span> <span class="cn">NA_integer_</span></span>
+<span id="cb2-29"><a href="#cb2-29" tabindex="-1"></a></span>
+<span id="cb2-30"><a href="#cb2-30" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Missing rows by mechanism:</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb2-31"><a href="#cb2-31" tabindex="-1"></a><span class="co">#&gt; Missing rows by mechanism:</span></span>
+<span id="cb2-32"><a href="#cb2-32" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">table</span>(long_data<span class="sc">$</span>miss_flag, <span class="at">useNA =</span> <span class="st">&quot;ifany&quot;</span>))</span>
+<span id="cb2-33"><a href="#cb2-33" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-34"><a href="#cb2-34" tabindex="-1"></a><span class="co">#&gt; Comp  MAR MNAR &lt;NA&gt; </span></span>
+<span id="cb2-35"><a href="#cb2-35" tabindex="-1"></a><span class="co">#&gt;    8   26   27  299</span></span></code></pre></div>
+</div>
+<div id="running-impute_nb" class="section level3">
+<h3>Running <code>impute_nb()</code></h3>
+<p>We now run the full MI pipeline. For this illustration we use
+<code>n_boot = 1</code> (no bootstrap) and <code>n_imp = 5</code>
+imputations, fitting a random-intercept NB GLMM.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">library</span>(gsDesignNB)</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co"># The formula mirrors the fixed-effects structure from the SAS code.</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co"># A random intercept per subject captures between-subject heterogeneity.</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>mi_formula <span class="ot">&lt;-</span> count <span class="sc">~</span> baseline <span class="sc">+</span> strat1 <span class="sc">+</span> trt <span class="sc">+</span> visit <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> id)</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>imp_result <span class="ot">&lt;-</span> <span class="fu">impute_nb</span>(</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  <span class="at">data            =</span> long_data,</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>  <span class="at">formula         =</span> mi_formula,</span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>  <span class="at">outcome_col     =</span> <span class="st">&quot;count&quot;</span>,</span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>  <span class="at">miss_flag_col   =</span> <span class="st">&quot;miss_flag&quot;</span>,</span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>  <span class="at">baseline_col    =</span> <span class="st">&quot;baseline&quot;</span>,</span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>  <span class="at">trt_col         =</span> <span class="st">&quot;trt&quot;</span>,</span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>  <span class="at">reference_trt   =</span> <span class="st">&quot;placebo&quot;</span>,</span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a>  <span class="at">subject_col     =</span> <span class="st">&quot;id&quot;</span>,</span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a>  <span class="at">strata_cols     =</span> <span class="fu">c</span>(<span class="st">&quot;trt&quot;</span>, <span class="st">&quot;strat1&quot;</span>),</span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a>  <span class="at">mar_values      =</span> <span class="st">&quot;MAR&quot;</span>,</span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a>  <span class="at">mnar_value      =</span> <span class="st">&quot;MNAR&quot;</span>,</span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a>  <span class="at">composite_value =</span> <span class="st">&quot;Comp&quot;</span>,</span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a>  <span class="at">n_imp           =</span> <span class="dv">5</span><span class="dt">L</span>,</span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a>  <span class="at">n_boot          =</span> <span class="dv">1</span><span class="dt">L</span>,</span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a>  <span class="at">seed            =</span> <span class="dv">42</span><span class="dt">L</span></span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a>)</span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a></span>
+<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a><span class="co"># Dimensions: n_subj * n_visit * n_imp rows</span></span>
+<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a><span class="fu">dim</span>(imp_result)</span>
+<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a><span class="fu">names</span>(imp_result)</span></code></pre></div>
+<pre><code>#&gt; NOTE: &#39;glmmTMB&#39; is not installed in this build environment.
+#&gt; Install it with install.packages(&#39;glmmTMB&#39;) to run this vignette.</code></pre>
+</div>
+<div id="inspecting-imputed-values" class="section level3">
+<h3>Inspecting imputed values</h3>
+<p>The <code>imputed_value</code> column contains:</p>
+<ul>
+<li>The <strong>observed value</strong> for non-missing rows.</li>
+<li>An <strong>imputed draw</strong> for missing rows.</li>
+</ul>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># Show imputed rows only, first 2 imputations</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>imp_missing <span class="ot">&lt;-</span> imp_result[</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="sc">!</span><span class="fu">is.na</span>(imp_result<span class="sc">$</span>miss_flag) <span class="sc">&amp;</span> imp_result<span class="sc">$</span>imputation <span class="sc">&lt;=</span> <span class="dv">2</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>  <span class="fu">c</span>(<span class="st">&quot;id&quot;</span>, <span class="st">&quot;visit&quot;</span>, <span class="st">&quot;trt&quot;</span>, <span class="st">&quot;miss_flag&quot;</span>, <span class="st">&quot;baseline&quot;</span>, <span class="st">&quot;count&quot;</span>, <span class="st">&quot;imputation&quot;</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>    <span class="st">&quot;imputed_value&quot;</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>]</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="fu">head</span>(imp_missing[<span class="fu">order</span>(imp_missing<span class="sc">$</span>miss_flag, imp_missing<span class="sc">$</span>id,</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>                        imp_missing<span class="sc">$</span>imputation), ], <span class="dv">20</span>)</span></code></pre></div>
+</div>
+<div id="comparing-imputed-means-by-strategy" class="section level3">
+<h3>Comparing imputed means by strategy</h3>
+<p>We can verify that the imputation behaved as expected. Under MAR,
+imputed values should centre around the model prediction for each arm.
+Under reference-based MNAR, imputed values for non-placebo subjects
+should look more like placebo outcomes (higher counts).</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="co"># Mean imputed value per mechanism and treatment arm</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>agg <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  imputed_value <span class="sc">~</span> miss_flag <span class="sc">+</span> trt,</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  <span class="at">data   =</span> imp_result[<span class="sc">!</span><span class="fu">is.na</span>(imp_result<span class="sc">$</span>miss_flag), ],</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>  <span class="at">FUN    =</span> mean</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>)</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>agg <span class="ot">&lt;-</span> agg[<span class="fu">order</span>(agg<span class="sc">$</span>miss_flag, agg<span class="sc">$</span>trt), ]</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="fu">print</span>(agg, <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+<p>The MNAR reference-based imputed means for the <code>low</code> and
+<code>high</code> arms should be closer to the <code>placebo</code> mean
+than the MAR-imputed means, reflecting the “what if this subject had
+been on placebo?” counterfactual.</p>
+</div>
+<div id="pooled-analysis-with-rubins-rules-standard-mi" class="section level3">
+<h3>Pooled analysis with Rubin’s rules (standard MI)</h3>
+<p>After standard MI (<code>n_boot = 1</code>), pool estimates across
+the <code>n_imp</code> imputed datasets using Rubin’s rules. Here we
+compute the mean total count per arm at visit 4 as a simple
+illustration.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co"># Per-imputation mean at visit 4</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>v4 <span class="ot">&lt;-</span> imp_result[imp_result<span class="sc">$</span>visit <span class="sc">==</span> <span class="dv">4</span>, ]</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>per_imp <span class="ot">&lt;-</span> <span class="fu">lapply</span>(<span class="fu">split</span>(v4, v4<span class="sc">$</span>imputation), <span class="cf">function</span>(d) {</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="fu">tapply</span>(d<span class="sc">$</span>imputed_value, d<span class="sc">$</span>trt, mean, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>})</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="co"># Point estimate: average over imputations</span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>Q_bar <span class="ot">&lt;-</span> <span class="fu">Reduce</span>(<span class="st">&quot;+&quot;</span>, per_imp) <span class="sc">/</span> <span class="fu">length</span>(per_imp)</span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="co"># Within-imputation variance (using single-imputation SE ~ mean/n, illustrative)</span></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="co"># In practice use regression SE from each imputed dataset</span></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Pooled mean imputed count at visit 4 by treatment arm:</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">round</span>(Q_bar, <span class="dv">2</span>))</span></code></pre></div>
+</div>
+<div id="bootstrapmi-for-variance-estimation" class="section level3">
+<h3>Bootstrap–MI for variance estimation</h3>
+<p>When <code>n_boot &gt; 1</code>, no Rubin’s rules are needed. The
+variance across all <code>n_boot * n_imp</code> completed datasets
+directly incorporates both sources of uncertainty.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>imp_boot <span class="ot">&lt;-</span> <span class="fu">impute_nb</span>(</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>  <span class="at">data            =</span> long_data,</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>  <span class="at">formula         =</span> mi_formula,</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>  <span class="at">outcome_col     =</span> <span class="st">&quot;count&quot;</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>  <span class="at">miss_flag_col   =</span> <span class="st">&quot;miss_flag&quot;</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>  <span class="at">baseline_col    =</span> <span class="st">&quot;baseline&quot;</span>,</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>  <span class="at">trt_col         =</span> <span class="st">&quot;trt&quot;</span>,</span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>  <span class="at">reference_trt   =</span> <span class="st">&quot;placebo&quot;</span>,</span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>  <span class="at">subject_col     =</span> <span class="st">&quot;id&quot;</span>,</span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>  <span class="at">strata_cols     =</span> <span class="fu">c</span>(<span class="st">&quot;trt&quot;</span>, <span class="st">&quot;strat1&quot;</span>),</span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a>  <span class="at">n_imp           =</span> <span class="dv">5</span><span class="dt">L</span>,</span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a>  <span class="at">n_boot          =</span> <span class="dv">3</span><span class="dt">L</span>,   <span class="co"># use larger values in practice (e.g., 100–500)</span></span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a>  <span class="at">seed            =</span> <span class="dv">99</span><span class="dt">L</span></span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a>)</span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a></span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a><span class="co"># Each replicate × imputation combination is an independent completed dataset</span></span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Total rows:&quot;</span>, <span class="fu">nrow</span>(imp_boot),</span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a>    <span class="st">&quot;= n_subj * n_visit * n_boot * n_imp =&quot;</span>,</span>
+<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a>    n_subj <span class="sc">*</span> n_visit <span class="sc">*</span> <span class="dv">3</span><span class="dt">L</span> <span class="sc">*</span> <span class="dv">5</span><span class="dt">L</span>, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a></span>
+<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a><span class="co"># Variance of the arm-level mean at visit 4 across all completed datasets</span></span>
+<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a>v4b <span class="ot">&lt;-</span> imp_boot[imp_boot<span class="sc">$</span>visit <span class="sc">==</span> <span class="dv">4</span>, ]</span>
+<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a>dataset_means <span class="ot">&lt;-</span> <span class="fu">tapply</span>(</span>
+<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a>  v4b<span class="sc">$</span>imputed_value,</span>
+<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a>  <span class="fu">list</span>(<span class="fu">paste</span>(v4b<span class="sc">$</span>replicate, v4b<span class="sc">$</span>imputation, <span class="at">sep =</span> <span class="st">&quot;_&quot;</span>), v4b<span class="sc">$</span>trt),</span>
+<span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a>  mean</span>
+<span id="cb8-27"><a href="#cb8-27" tabindex="-1"></a>)</span>
+<span id="cb8-28"><a href="#cb8-28" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;</span><span class="sc">\n</span><span class="st">Variance of dataset-level means across boot×imp datasets:</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb8-29"><a href="#cb8-29" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">round</span>(<span class="fu">apply</span>(dataset_means, <span class="dv">2</span>, var), <span class="dv">4</span>))</span></code></pre></div>
+</div>
+<div id="using-the-building-block-functions-directly" class="section level3">
+<h3>Using the building-block functions directly</h3>
+<p>Advanced users can call the individual strategy functions for more
+control.</p>
+<div id="step-1-fit-the-glmm" class="section level4">
+<h4>Step 1 — Fit the GLMM</h4>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>obs_data <span class="ot">&lt;-</span> long_data[<span class="sc">!</span><span class="fu">is.na</span>(long_data<span class="sc">$</span>count), ]</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>fits <span class="ot">&lt;-</span> <span class="fu">fit_nb_glmm</span>(</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>  <span class="at">data    =</span> obs_data,</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>  <span class="at">formula =</span> count <span class="sc">~</span> baseline <span class="sc">+</span> strat1 <span class="sc">+</span> trt <span class="sc">+</span> visit <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> id)</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>)</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Estimated dispersion k:&quot;</span>, <span class="fu">round</span>(fits[[<span class="st">&quot;1&quot;</span>]]<span class="sc">$</span>k, <span class="dv">3</span>), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+</div>
+<div id="step-2-mar-imputation" class="section level4">
+<h4>Step 2 — MAR imputation</h4>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>imp_mar <span class="ot">&lt;-</span> <span class="fu">impute_nb_mar</span>(</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>  <span class="at">data          =</span> long_data,</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>  <span class="at">fits          =</span> fits,</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>  <span class="at">outcome_col   =</span> <span class="st">&quot;count&quot;</span>,</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>  <span class="at">miss_flag_col =</span> <span class="st">&quot;miss_flag&quot;</span>,</span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>  <span class="at">mar_values    =</span> <span class="fu">c</span>(<span class="st">&quot;MAR&quot;</span>, <span class="st">&quot;MNAR&quot;</span>),  <span class="co"># reference-arm MNAR treated as MAR</span></span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a>  <span class="at">n_imp         =</span> <span class="dv">3</span><span class="dt">L</span></span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a>)</span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;MAR imputed rows:&quot;</span>, <span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(imp_mar<span class="sc">$</span>imputed_value[</span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a>  imp_mar<span class="sc">$</span>imputation <span class="sc">==</span> <span class="dv">1</span> <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">is.na</span>(imp_mar<span class="sc">$</span>miss_flag)</span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a>])), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+</div>
+<div id="step-3-mnar-reference-based-imputation" class="section level4">
+<h4>Step 3 — MNAR reference-based imputation</h4>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>imp_mnar <span class="ot">&lt;-</span> <span class="fu">impute_nb_mnar_ref</span>(</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>  <span class="at">data          =</span> long_data,</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>  <span class="at">fits          =</span> fits,</span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>  <span class="at">outcome_col   =</span> <span class="st">&quot;count&quot;</span>,</span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>  <span class="at">miss_flag_col =</span> <span class="st">&quot;miss_flag&quot;</span>,</span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>  <span class="at">mnar_value    =</span> <span class="st">&quot;MNAR&quot;</span>,</span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>  <span class="at">trt_col       =</span> <span class="st">&quot;trt&quot;</span>,</span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a>  <span class="at">reference_trt =</span> <span class="st">&quot;placebo&quot;</span>,</span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a>  <span class="at">n_imp         =</span> <span class="dv">3</span><span class="dt">L</span></span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a>)</span></code></pre></div>
+</div>
+<div id="step-4-composite-strategy-no-model-required" class="section level4">
+<h4>Step 4 — Composite strategy (no model required)</h4>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="fu">library</span>(gsDesignNB)</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a><span class="co"># Composite fill can be applied to any data frame, no glmmTMB needed</span></span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>df_comp_example <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>  <span class="at">count         =</span> <span class="fu">c</span>(<span class="dv">3</span><span class="dt">L</span>,   <span class="cn">NA</span>,     <span class="cn">NA</span>,      <span class="dv">5</span><span class="dt">L</span>),</span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>  <span class="at">imputed_value =</span> <span class="fu">c</span>(<span class="dv">3</span><span class="dt">L</span>,    <span class="dv">7</span><span class="dt">L</span>,    <span class="cn">NA</span>,      <span class="dv">5</span><span class="dt">L</span>),</span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>  <span class="at">miss_flag     =</span> <span class="fu">c</span>(<span class="cn">NA</span>,  <span class="st">&quot;MAR&quot;</span>, <span class="st">&quot;Comp&quot;</span>,    <span class="cn">NA</span>),</span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a>  <span class="at">baseline      =</span> <span class="fu">c</span>(<span class="dv">4</span><span class="dt">L</span>,    <span class="dv">4</span><span class="dt">L</span>,    <span class="dv">4</span><span class="dt">L</span>,      <span class="dv">6</span><span class="dt">L</span>)</span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a>)</span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a><span class="fu">impute_nb_composite</span>(</span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a>  df_comp_example,</span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a>  <span class="at">outcome_col     =</span> <span class="st">&quot;count&quot;</span>,</span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a>  <span class="at">miss_flag_col   =</span> <span class="st">&quot;miss_flag&quot;</span>,</span>
+<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a>  <span class="at">composite_value =</span> <span class="st">&quot;Comp&quot;</span>,</span>
+<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a>  <span class="at">baseline_col    =</span> <span class="st">&quot;baseline&quot;</span></span>
+<span id="cb12-16"><a href="#cb12-16" tabindex="-1"></a>)</span>
+<span id="cb12-17"><a href="#cb12-17" tabindex="-1"></a><span class="co">#&gt;   count imputed_value miss_flag baseline</span></span>
+<span id="cb12-18"><a href="#cb12-18" tabindex="-1"></a><span class="co">#&gt; 1     3             3      &lt;NA&gt;        4</span></span>
+<span id="cb12-19"><a href="#cb12-19" tabindex="-1"></a><span class="co">#&gt; 2    NA             7       MAR        4</span></span>
+<span id="cb12-20"><a href="#cb12-20" tabindex="-1"></a><span class="co">#&gt; 3    NA             4      Comp        4</span></span>
+<span id="cb12-21"><a href="#cb12-21" tabindex="-1"></a><span class="co">#&gt; 4     5             5      &lt;NA&gt;        6</span></span></code></pre></div>
+<p>The third row (<code>miss_flag = &quot;Comp&quot;</code>) now has
+<code>imputed_value = 4</code> (the baseline value); the second row
+(<code>miss_flag = &quot;MAR&quot;</code>) retains its previously imputed value of
+7.</p>
+</div>
+</div>
+</div>
+<div id="key-considerations" class="section level2">
+<h2>Key considerations</h2>
+<p><strong>Choice of random-effect structure.</strong> The original SAS
+model uses an unstructured residual covariance across visits within each
+subject × endpoint combination. In <code>glmmTMB</code> this can be
+approximated with <code>(0 + visit_factor | id:param)</code>, but
+convergence may be slow for small datasets. Start with a random
+intercept <code>(1 | id)</code> and add complexity incrementally.</p>
+<p><strong>Treatment variable type.</strong> If <code>trt_col</code> is
+a factor, ensure that <code>reference_trt</code> matches a level in the
+factor. For counterfactual prediction the reference level is inserted
+into the newdata frame; if new levels arise,
+<code>allow.new.levels = TRUE</code> handles them gracefully.</p>
+<p><strong>Composite and MNAR rows that are observed.</strong> The
+composite strategy only overwrites rows where
+<code>is.na(outcome_col)</code>. Observed rows with
+<code>miss_flag = &quot;Comp&quot;</code> (e.g., the actual ICE visit itself, if
+observed) are left unchanged.</p>
+<p><strong>Bootstrap sample size.</strong> For the boot-MI approach,
+<code>n_boot = 100</code>–<code>500</code> replicates is typical in
+practice. The smaller values used in this vignette are for illustration
+only.</p>
+<p><strong>Pooling.</strong> With standard MI (<code>n_boot = 1</code>),
+pool regression-model estimates across imputations using Rubin’s rules.
+With boot-MI (<code>n_boot &gt; 1</code>), the empirical variance across
+all <code>n_boot × n_imp</code> datasets is a valid variance estimator
+without additional combining rules.</p>
+</div>
+<div id="session-info" class="section level2">
+<h2>Session info</h2>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a><span class="co">#&gt; Platform: aarch64-apple-darwin23</span></span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a><span class="co">#&gt; Running under: macOS Tahoe 26.5.2</span></span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a><span class="co">#&gt; Matrix products: default</span></span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a><span class="co">#&gt; BLAS:   /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRblas.0.dylib </span></span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a><span class="co">#&gt; LAPACK: /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1</span></span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a><span class="co">#&gt; locale:</span></span>
+<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a><span class="co">#&gt; [1] C/C.UTF-8/C.UTF-8/C/C.UTF-8/C.UTF-8</span></span>
+<span id="cb13-12"><a href="#cb13-12" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb13-13"><a href="#cb13-13" tabindex="-1"></a><span class="co">#&gt; time zone: America/New_York</span></span>
+<span id="cb13-14"><a href="#cb13-14" tabindex="-1"></a><span class="co">#&gt; tzcode source: internal</span></span>
+<span id="cb13-15"><a href="#cb13-15" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb13-16"><a href="#cb13-16" tabindex="-1"></a><span class="co">#&gt; attached base packages:</span></span>
+<span id="cb13-17"><a href="#cb13-17" tabindex="-1"></a><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
+<span id="cb13-18"><a href="#cb13-18" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb13-19"><a href="#cb13-19" tabindex="-1"></a><span class="co">#&gt; other attached packages:</span></span>
+<span id="cb13-20"><a href="#cb13-20" tabindex="-1"></a><span class="co">#&gt; [1] gt_1.3.0          gsDesign_3.10.0   MASS_7.3-65       ggplot2_4.0.3    </span></span>
+<span id="cb13-21"><a href="#cb13-21" tabindex="-1"></a><span class="co">#&gt; [5] data.table_1.18.4 gsDesignNB_0.3.2 </span></span>
+<span id="cb13-22"><a href="#cb13-22" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb13-23"><a href="#cb13-23" tabindex="-1"></a><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
+<span id="cb13-24"><a href="#cb13-24" tabindex="-1"></a><span class="co">#&gt;  [1] sass_0.4.10         future_1.70.0       generics_0.1.4     </span></span>
+<span id="cb13-25"><a href="#cb13-25" tabindex="-1"></a><span class="co">#&gt;  [4] tidyr_1.3.2         xml2_1.6.0          r2rtf_1.3.1        </span></span>
+<span id="cb13-26"><a href="#cb13-26" tabindex="-1"></a><span class="co">#&gt;  [7] lattice_0.22-9      listenv_1.0.0       digest_0.6.39      </span></span>
+<span id="cb13-27"><a href="#cb13-27" tabindex="-1"></a><span class="co">#&gt; [10] magrittr_2.0.5      evaluate_1.0.5      grid_4.6.1         </span></span>
+<span id="cb13-28"><a href="#cb13-28" tabindex="-1"></a><span class="co">#&gt; [13] RColorBrewer_1.1-3  iterators_1.0.14    mvtnorm_1.4-1      </span></span>
+<span id="cb13-29"><a href="#cb13-29" tabindex="-1"></a><span class="co">#&gt; [16] fastmap_1.2.0       Matrix_1.7-5        foreach_1.5.2      </span></span>
+<span id="cb13-30"><a href="#cb13-30" tabindex="-1"></a><span class="co">#&gt; [19] simtrial_1.0.2      jsonlite_2.0.0      survival_3.8-6     </span></span>
+<span id="cb13-31"><a href="#cb13-31" tabindex="-1"></a><span class="co">#&gt; [22] purrr_1.2.2         scales_1.4.0        codetools_0.2-20   </span></span>
+<span id="cb13-32"><a href="#cb13-32" tabindex="-1"></a><span class="co">#&gt; [25] jquerylib_0.1.4     cli_3.6.6           rlang_1.2.0        </span></span>
+<span id="cb13-33"><a href="#cb13-33" tabindex="-1"></a><span class="co">#&gt; [28] parallelly_1.48.0   future.apply_1.20.2 splines_4.6.1      </span></span>
+<span id="cb13-34"><a href="#cb13-34" tabindex="-1"></a><span class="co">#&gt; [31] withr_3.0.3         cachem_1.1.0        yaml_2.3.12        </span></span>
+<span id="cb13-35"><a href="#cb13-35" tabindex="-1"></a><span class="co">#&gt; [34] otel_0.2.0          tools_4.6.1         parallel_4.6.1     </span></span>
+<span id="cb13-36"><a href="#cb13-36" tabindex="-1"></a><span class="co">#&gt; [37] doFuture_1.2.2      dplyr_1.2.1         globals_0.19.1     </span></span>
+<span id="cb13-37"><a href="#cb13-37" tabindex="-1"></a><span class="co">#&gt; [40] vctrs_0.7.3         R6_2.6.1            lifecycle_1.0.5    </span></span>
+<span id="cb13-38"><a href="#cb13-38" tabindex="-1"></a><span class="co">#&gt; [43] fs_2.1.0            pkgconfig_2.0.3     pillar_1.11.1      </span></span>
+<span id="cb13-39"><a href="#cb13-39" tabindex="-1"></a><span class="co">#&gt; [46] bslib_0.11.0        gtable_0.3.6        glue_1.8.1         </span></span>
+<span id="cb13-40"><a href="#cb13-40" tabindex="-1"></a><span class="co">#&gt; [49] Rcpp_1.1.1-1.1      xfun_0.59           tibble_3.3.1       </span></span>
+<span id="cb13-41"><a href="#cb13-41" tabindex="-1"></a><span class="co">#&gt; [52] tidyselect_1.2.1    knitr_1.51          farver_2.1.2       </span></span>
+<span id="cb13-42"><a href="#cb13-42" tabindex="-1"></a><span class="co">#&gt; [55] xtable_1.8-8        htmltools_0.5.9     labeling_0.4.3     </span></span>
+<span id="cb13-43"><a href="#cb13-43" tabindex="-1"></a><span class="co">#&gt; [58] rmarkdown_2.31      compiler_4.6.1      S7_0.2.2</span></span></code></pre></div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

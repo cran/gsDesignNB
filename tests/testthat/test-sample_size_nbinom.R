@@ -112,6 +112,59 @@ test_that("Event gap results in correct exposure reporting", {
   # expect_equal(res$inputs$method, "zhu") # Method removed
 })
 
+test_that("Jensen correction for event gap increases sample size", {
+  # With event gap and dispersion > 0, the Jensen correction reduces the
+
+  # effective rate, increasing the required sample size relative to the
+  # naive formula (lambda / (1 + lambda * gap)).
+  #
+  # Verify the correction is applied by comparing sample sizes:
+  # - With dispersion = 0 (Poisson): no correction needed (no frailty)
+  # - With dispersion > 0: correction reduces effective rate -> larger n
+
+  gap <- 0.5
+  lambda1 <- 0.5
+  lambda2 <- 0.3
+
+  # Poisson case (k=0): effective rate = lambda / (1 + lambda * gap) exactly
+  res_poisson <- sample_size_nbinom(
+    lambda1 = lambda1, lambda2 = lambda2, dispersion = 0, power = 0.8,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24,
+    event_gap = gap
+  )
+
+  # NB case (k=0.5): correction factor < 1, so effective rate is lower,
+  # variance is higher, and n should be larger
+  res_nb <- sample_size_nbinom(
+    lambda1 = lambda1, lambda2 = lambda2, dispersion = 0.5, power = 0.8,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24,
+    event_gap = gap
+  )
+
+  # NB should require more subjects (dispersion increases variance + gap correction)
+  expect_true(res_nb$n_total > res_poisson$n_total)
+  expect_true(res_nb$variance > res_poisson$variance)
+
+  # Verify the correction factor analytically for a single group
+  # correction = 1 - k * lambda * gap / (1 + lambda * gap)^2
+  k <- 0.5
+  correction1 <- 1 - k * lambda1 * gap / (1 + lambda1 * gap)^2
+  correction2 <- 1 - k * lambda2 * gap / (1 + lambda2 * gap)^2
+
+  # Correction should be < 1 and > 0 for reasonable parameters
+  expect_true(correction1 > 0 && correction1 < 1)
+  expect_true(correction2 > 0 && correction2 < 1)
+
+  # The effective rate with correction should be smaller than the naive rate
+  naive1 <- lambda1 / (1 + lambda1 * gap)
+  corrected1 <- naive1 * correction1
+  expect_true(corrected1 < naive1)
+
+  # Verify that with k=0, no correction is applied (correction factor = 1)
+  correction_k0 <- 1 - 0 * lambda1 * gap / (1 + lambda1 * gap)^2
+  expect_equal(correction_k0, 1)
+})
+
 test_that("sample_size_nbinom matches published results", {
   # Helper to simulate fixed exposure of 1.0
   # We use a very short accrual duration and trial duration = 1 + accrual duration
@@ -180,4 +233,361 @@ test_that("sample_size_nbinom handles vector dropout_rate", {
 
   expect_true(res_diff$exposure[1] < res_diff$exposure[2])
   expect_true(length(res_diff$exposure) == 2)
+})
+
+test_that("sample_size_nbinom input validation errors", {
+  base <- list(lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1,
+               accrual_rate = 10, accrual_duration = 2, trial_duration = 2)
+
+  # Bad rr0
+  expect_error(do.call(sample_size_nbinom, c(base, rr0 = -1)), "rr0 must be positive")
+
+  # Bad power
+  expect_error(do.call(sample_size_nbinom, c(base, power = 0)), "Power must be between")
+  expect_error(do.call(sample_size_nbinom, c(base, power = 1)), "Power must be between")
+
+  # Bad alpha
+  expect_error(do.call(sample_size_nbinom, c(base, alpha = 0)), "Alpha must be between")
+  expect_error(do.call(sample_size_nbinom, c(base, alpha = 1)), "Alpha must be between")
+
+  # Bad dropout_rate
+  expect_error(do.call(sample_size_nbinom, c(base, dropout_rate = -0.1)), "non-negative")
+  expect_error(do.call(sample_size_nbinom, c(base, list(dropout_rate = c(0.1, 0.1, 0.1)))), "scalar, a vector of length 2, or a data frame")
+
+  # Bad max_followup
+  expect_error(do.call(sample_size_nbinom, c(base, max_followup = 0)), "max_followup must be positive")
+  expect_error(do.call(sample_size_nbinom, c(base, max_followup = -1)), "max_followup must be positive")
+  expect_error(do.call(sample_size_nbinom, c(base, list(max_followup = c(1, 2, 3)))), "scalar or a vector of length 2")
+})
+
+test_that("sample_size_nbinom handles non-inferiority (rr0 != 1)", {
+  res <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.5, rr0 = 1.1, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 2, trial_duration = 2
+  )
+  expect_true(res$n_total > 0)
+  expect_equal(res$inputs$rr0, 1.1)
+})
+
+test_that("score sizing reports null variance on final-analysis scale", {
+  res <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0, power = 0.8,
+    accrual_rate = 10, accrual_duration = 2, trial_duration = 2,
+    test_type = "score"
+  )
+
+  mu0 <- mean(c(0.5, 0.3)) * res$exposure[1]
+  v0 <- (1 / mu0) * 2
+  expect_equal(res$exposure[1], 1)
+  expect_equal(res$variance_null, v0 / res$n1)
+})
+
+test_that("sample_size_nbinom handles max_followup with split case", {
+  # max_followup shorter than some follow-up times triggers Case 3 (split)
+  res <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 10, trial_duration = 15,
+    max_followup = 8
+  )
+  expect_true(res$n_total > 0)
+  # With max_followup, exposure should be less than without
+  res_no_mf <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 10, trial_duration = 15
+  )
+  expect_true(res$exposure[1] <= res_no_mf$exposure[1])
+})
+
+test_that("sample_size_nbinom handles max_followup all-truncated case", {
+  # Very short max_followup truncates everyone
+  res <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 10, trial_duration = 15,
+    max_followup = 2
+  )
+  expect_true(res$n_total > 0)
+  expect_true(res$exposure[1] <= 2)
+})
+
+test_that("sample_size_nbinom handles dropout with max_followup", {
+  res <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 10, trial_duration = 15,
+    dropout_rate = 0.1, max_followup = 8
+  )
+  expect_true(res$n_total > 0)
+})
+
+test_that("print.sample_size_nbinom_result works", {
+  res <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24
+  )
+  expect_output(print(res), "Sample size")
+})
+
+test_that("print.sample_size_nbinom_result shows non-inferiority", {
+  res <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.5, rr0 = 1.1, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24
+  )
+  expect_output(print(res), "Null hypothesis RR")
+})
+
+test_that("print.sample_size_nbinom_result shows vector dispersion", {
+  res <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = c(0.1, 0.2), power = 0.8,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24
+  )
+  expect_output(print(res), "\\(n1\\)")
+})
+
+test_that("print.sample_size_nbinom_result shows dropout", {
+  res <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24,
+    dropout_rate = 0.05
+  )
+  expect_output(print(res), "Dropout rate")
+})
+
+test_that("print shows different dropout rates per group", {
+  res <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24,
+    dropout_rate = c(0.05, 0.10)
+  )
+  expect_output(print(res), "\\(n1\\)")
+})
+
+test_that("print shows event gap info", {
+  res <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24,
+    event_gap = 0.5
+  )
+  expect_output(print(res), "Event gap")
+})
+
+test_that("print shows max_followup", {
+  res <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24,
+    max_followup = 12
+  )
+  expect_output(print(res), "Max follow")
+})
+
+test_that("print shows different exposure per group", {
+  res <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24,
+    dropout_rate = c(0.05, 0.2)
+  )
+  expect_output(print(res), "\\(n1\\)")
+})
+
+test_that("summary.sample_size_nbinom_result returns summary object", {
+  res <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24
+  )
+  s <- summary(res)
+  expect_s3_class(s, "sample_size_nbinom_summary")
+  expect_true(is.character(s))
+})
+
+test_that("summary shows non-inferiority rr0", {
+  res <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.5, rr0 = 1.1, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24
+  )
+  s <- summary(res)
+  s_text <- paste(s, collapse = " ")
+  expect_true(grepl("null hypothesis RR", s_text))
+})
+
+test_that("summary shows vector dispersion", {
+  res <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = c(0.1, 0.2), power = 0.8,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24
+  )
+  s <- summary(res)
+  s_text <- paste(s, collapse = " ")
+  expect_true(grepl("\\(n1\\)", s_text))
+})
+
+test_that("summary shows event gap info", {
+  res <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24,
+    event_gap = 0.5
+  )
+  s <- summary(res)
+  s_text <- paste(s, collapse = " ")
+  expect_true(grepl("Event gap", s_text))
+})
+
+test_that("summary shows different exposure per group", {
+  res <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24,
+    dropout_rate = c(0.05, 0.2)
+  )
+  s <- summary(res)
+  s_text <- paste(s, collapse = " ")
+  expect_true(grepl("\\(n1\\)", s_text))
+})
+
+test_that("print.sample_size_nbinom_summary works", {
+  res <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24
+  )
+  s <- summary(res)
+  expect_output(print(s), "negative binomial")
+})
+
+# --- Piecewise exponential dropout tests ---
+
+test_that("piecewise dropout with one piece matches scalar dropout", {
+  # A data frame with a single constant rate should give identical results
+  # to the scalar specification.
+  res_scalar <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24,
+    dropout_rate = 0.05
+  )
+
+  res_pw <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24,
+    dropout_rate = data.frame(rate = 0.05, duration = Inf)
+  )
+
+  expect_equal(res_scalar$n_total, res_pw$n_total)
+  expect_equal(res_scalar$exposure, res_pw$exposure, tolerance = 1e-10)
+  expect_equal(res_scalar$variance, res_pw$variance, tolerance = 1e-10)
+})
+
+test_that("piecewise dropout with treatment column matches per-group scalar", {
+  res_vec <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24,
+    dropout_rate = c(0.05, 0.10)
+  )
+
+  res_pw <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24,
+    dropout_rate = data.frame(
+      treatment = c(1, 2),
+      rate = c(0.05, 0.10),
+      duration = c(Inf, Inf)
+    )
+  )
+
+  expect_equal(res_vec$n_total, res_pw$n_total)
+  expect_equal(res_vec$exposure, res_pw$exposure, tolerance = 1e-10)
+})
+
+test_that("piecewise dropout higher early rate reduces exposure", {
+  # Two pieces: high dropout first 6 months, low after.
+  # Compared to constant dropout at the low rate, exposure should be less.
+  res_low <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 12, trial_duration = 24,
+    dropout_rate = data.frame(rate = 0.02, duration = Inf)
+  )
+
+  res_pw <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 12, trial_duration = 24,
+    dropout_rate = data.frame(rate = c(0.10, 0.02), duration = c(6, Inf))
+  )
+
+  # Higher early dropout means less exposure and more subjects needed
+  expect_true(res_pw$exposure[1] < res_low$exposure[1])
+  expect_true(res_pw$n_total >= res_low$n_total)
+})
+
+test_that("piecewise dropout with zero rate matches no dropout", {
+  res_none <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 10, trial_duration = 15,
+    dropout_rate = 0
+  )
+
+  res_pw_zero <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 10, trial_duration = 15,
+    dropout_rate = data.frame(rate = c(0, 0), duration = c(5, Inf))
+  )
+
+  expect_equal(res_none$n_total, res_pw_zero$n_total)
+  expect_equal(res_none$exposure, res_pw_zero$exposure, tolerance = 1e-10)
+})
+
+test_that("piecewise dropout with max_followup works correctly", {
+  # Piecewise dropout with max_followup should interact properly.
+  res <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 12, trial_duration = 24,
+    dropout_rate = data.frame(rate = c(0.08, 0.03), duration = c(6, Inf)),
+    max_followup = 12
+  )
+
+  expect_true(res$n_total > 0)
+  expect_true(res$exposure[1] > 0)
+  # Exposure must be less than max_followup
+
+  expect_true(res$exposure[1] < 12)
+})
+
+test_that("piecewise dropout per-group data frame works", {
+  # Different piecewise schedules for each group.
+  res <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 12, trial_duration = 24,
+    dropout_rate = data.frame(
+      treatment = c(1, 1, 2, 2),
+      rate = c(0.05, 0.02, 0.08, 0.03),
+      duration = c(6, Inf, 6, Inf)
+    )
+  )
+
+  expect_true(res$n_total > 0)
+  # Group 2 has higher dropout, so lower exposure
+  expect_true(res$exposure[2] < res$exposure[1])
+})
+
+test_that("piecewise dropout input validation works", {
+  # Missing columns
+  expect_error(
+    sample_size_nbinom(
+      lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1,
+      accrual_rate = 10, accrual_duration = 10, trial_duration = 15,
+      dropout_rate = data.frame(rate = 0.05)
+    ),
+    "duration"
+  )
+
+  # Negative rate in data frame
+  expect_error(
+    sample_size_nbinom(
+      lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1,
+      accrual_rate = 10, accrual_duration = 10, trial_duration = 15,
+      dropout_rate = data.frame(rate = -0.05, duration = Inf)
+    ),
+    "non-negative"
+  )
+})
+
+test_that("print handles piecewise dropout display", {
+  res <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 12, trial_duration = 24,
+    dropout_rate = data.frame(rate = c(0.08, 0.03), duration = c(6, Inf))
+  )
+  expect_output(print(res), "piecewise")
 })

@@ -2,13 +2,16 @@
 #'
 #' Simulates multiple replicates of a group sequential clinical trial with negative
 #' binomial outcomes, performing interim analyses at specified calendar times.
+#' Supports parallel execution via the \pkg{future} framework for faster simulation
+#' with reproducible random number generation.
 #'
 #' @param n_sims Number of simulations to run.
 #' @param enroll_rate Enrollment rates (data frame with `rate` and `duration`).
 #' @param fail_rate Failure rates (data frame with `treatment`, `rate`, `dispersion`).
 #' @param dropout_rate Dropout rates (data frame with `treatment`, `rate`, `duration`).
 #' @param max_followup Maximum follow-up time.
-#' @param event_gap Event gap duration.
+#' @param event_gap Event gap duration. If `NULL`, inherits
+#'   `design$inputs$event_gap` when available; otherwise defaults to `0`.
 #' @param analysis_times Vector of calendar times for interim and final analyses.
 #'   Optional if `cuts` is provided.
 #' @param n_target Total sample size to enroll (optional, if not defined by `enroll_rate`).
@@ -21,6 +24,53 @@
 #'   should be a list of arguments for [get_cut_date()] (e.g., `planned_calendar`,
 #'   `target_events`, `target_info`). If provided, `analysis_times` is ignored
 #'   (or used as a fallback if `planned_calendar` is missing in a cut).
+#' @param test_type Type of test statistic passed to [mutze_test()]:
+#'   `"wald"` (default) or `"score"`. See [mutze_test()] for details.
+#' @param seed Random seed for reproducible simulations. Controls the
+#'   `future.seed` argument of [future.apply::future_lapply()]:
+#'   - `TRUE` (default): Automatically generates parallel-safe L'Ecuyer-CMRG
+#'     random number streams. Results are reproducible when preceded by
+#'     [set.seed()] regardless of the number of workers.
+#'   - An integer: Used as the seed for L'Ecuyer-CMRG streams directly
+#'     (equivalent to calling [set.seed()] with this value before the run).
+#'   - `FALSE` or `NULL`: No special RNG handling (not recommended; results
+#'     may not be reproducible in parallel).
+#'
+#'   When \pkg{future.apply} is not installed, `seed` is used with
+#'   [set.seed()] for sequential execution. See **Details** for parallel usage.
+#'
+#' @details
+#' ## Parallel execution
+#'
+#' This function uses [future.apply::future_lapply()] to distribute simulation
+#' replicates across workers. By default, simulations run sequentially
+#' (equivalent to [lapply()]). To enable parallel execution, set a
+#' \pkg{future} plan before calling this function:
+#'
+#' ```
+#' library(future)
+#' plan(multisession, workers = 4)   # use 4 parallel workers
+#' results <- sim_gs_nbinom(...)
+#' plan(sequential)                  # restore default
+#' ```
+#'
+#' ## Reproducibility
+#'
+#' The default `seed = TRUE` ensures that results are fully reproducible
+#' regardless of the \pkg{future} plan (sequential or parallel) and regardless
+#' of the number of workers. This is achieved via the L'Ecuyer-CMRG algorithm
+#' which generates statistically independent random number streams for each
+#' simulation replicate. To obtain the same results across runs:
+#'
+#' ```
+#' set.seed(42)
+#' res1 <- sim_gs_nbinom(n_sims = 100, ..., seed = TRUE)
+#'
+#' set.seed(42)
+#' res2 <- sim_gs_nbinom(n_sims = 100, ..., seed = TRUE)
+#'
+#' identical(res1, res2)  # TRUE, even with different plan()
+#' ```
 #'
 #' @return A data frame containing simulation results for each analysis of each trial.
 #'   Columns include:
@@ -56,6 +106,7 @@
 #' @export
 #'
 #' @examples
+#' # Basic sequential usage with reproducible seed
 #' set.seed(123)
 #' enroll_rate <- data.frame(rate = 10, duration = 3)
 #' fail_rate <- data.frame(
@@ -85,16 +136,39 @@
 #'   max_followup = 4,
 #'   n_target = 30,
 #'   design = design,
-#'   cuts = cuts
+#'   cuts = cuts,
+#'   seed = TRUE
 #' )
 #' head(sim_results)
+#'
+#' \dontrun{
+#' # Parallel execution (requires future and future.apply)
+#' library(future)
+#' plan(multisession, workers = 4)
+#' set.seed(42)
+#' sim_results <- sim_gs_nbinom(
+#'   n_sims = 1000,
+#'   enroll_rate = enroll_rate,
+#'   fail_rate = fail_rate,
+#'   dropout_rate = dropout_rate,
+#'   max_followup = 4,
+#'   n_target = 30,
+#'   design = design,
+#'   cuts = cuts,
+#'   seed = TRUE
+#' )
+#' plan(sequential)
+#' }
 sim_gs_nbinom <- function(
   n_sims, enroll_rate, fail_rate, dropout_rate = NULL,
-  max_followup, event_gap = 0, analysis_times = NULL,
+  max_followup, event_gap = NULL, analysis_times = NULL,
   n_target = NULL, design = NULL,
-  data_cut = cut_data_by_date, cuts = NULL
+  data_cut = cut_data_by_date, cuts = NULL,
+  test_type = c("wald", "score"),
+  seed = TRUE
 ) {
   # Validate inputs
+  test_type <- match.arg(test_type)
   if (is.null(design)) {
     stop("design object must be provided to extract planning parameters.")
   }
@@ -114,6 +188,14 @@ sim_gs_nbinom <- function(
   lambda1_plan <- inputs$lambda1
   lambda2_plan <- inputs$lambda2
   ratio_plan <- inputs$ratio
+
+  if (is.null(event_gap)) {
+    if (!is.null(inputs$event_gap) && !is.na(inputs$event_gap)) {
+      event_gap <- inputs$event_gap
+    } else {
+      event_gap <- 0
+    }
+  }
 
   # Function to run one simulation
   run_one_sim <- function(sim_id) {
@@ -202,7 +284,7 @@ sim_gs_nbinom <- function(
       if (n_enrolled >= 4 && events_total >= 2) {
         
         # --- 1. Unblinded ML ---
-        test_res <- tryCatch(mutze_test(cut_data), error = function(e) NULL)
+        test_res <- tryCatch(mutze_test(cut_data, test_type = test_type), error = function(e) NULL)
 
         if (!is.null(test_res)) {
           z_stat <- test_res$z
@@ -327,7 +409,19 @@ sim_gs_nbinom <- function(
     do.call(rbind, res_list)
   }
 
-  # Run simulations
-  results_list <- lapply(seq_len(n_sims), run_one_sim)
+  # Run simulations (parallel-safe via future.apply if available)
+  has_future_apply <- requireNamespace("future.apply", quietly = TRUE)
+
+  if (has_future_apply) {
+    results_list <- future.apply::future_lapply(
+      seq_len(n_sims),
+      run_one_sim,
+      future.seed = seed
+    )
+  } else {
+    if (is.numeric(seed)) set.seed(seed)
+    results_list <- lapply(seq_len(n_sims), run_one_sim)
+  }
+
   do.call(rbind, results_list)
 }

@@ -1,0 +1,430 @@
+---
+title: "Score vs Wald tests and sample-size recommendations"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Score vs Wald tests and sample-size recommendations}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r, message=FALSE, warning=FALSE}
+library(gsDesignNB)
+library(data.table)
+library(ggplot2)
+```
+
+## Introduction
+
+This vignette compares the Wald and score test implementations in `mutze_test()` across a
+factorial grid of negative binomial trial scenarios. It also gives practical recommendations for
+sample-size calculation when the usual Zhu--Lakkis / Friede--Schmidli / Mutze Wald formula is
+adequate, when score-test sizing is a useful diagnostic, and when the score test itself is the
+more important change for Type I error control.
+
+The **Wald sizing** option in `sample_size_nbinom(test_type = "wald")` uses the alternative
+variance $V_1$ for both the Type I and power components. The **score sizing** option in
+`sample_size_nbinom(test_type = "score")` uses the null variance $V_0$ for the Type I component
+and the alternative variance $V_1$ for the power component:
+
+$$
+n_1 =
+\frac{(z_{\alpha/s}\sqrt{V_0} + z_\beta\sqrt{V_1})^2}
+     {(\theta - \theta_0)^2}.
+$$
+
+This distinction matters most when the planned final analysis uses a score statistic evaluated
+under the null, or when finite-sample Type I error control is more important than preserving the
+historical Wald analysis convention.
+In the superiority scenarios below, the Wald and score sample sizes are close; the traditional
+Wald sample size paired with the score test often provides a useful practical margin for power
+while preserving the score test's Type I error protection.
+
+The full $2 \times 2$ factorial comparison is:
+
+| | Wald-sized trial | Score-sized trial |
+|---|---|---|
+| **Wald test** | Wald / Wald | Score / Wald |
+| **Score test** | Wald / Score | Score / Score |
+
+We assess:
+
+- **Type I error control** under $H_0: RR = 1$
+- **Power** under $H_1: RR = 0.70$
+- **Z-score distributions** to check asymptotic normality
+
+Tables and figures are rendered from compact precomputed summaries so the CRAN
+package does not need to bundle the full trial-level simulation output or large
+interactive widget dependencies.
+
+Results are pre-computed by `data-raw/generate_score_sweep.R`, summarized for
+the CRAN vignette cache, and loaded here.
+
+## Load pre-computed results
+
+```{r}
+summary_file <- system.file("extdata", "score_sweep_summary.rds",
+                            package = "gsDesignNB")
+if (summary_file == "" && file.exists("../inst/extdata/score_sweep_summary.rds")) {
+  summary_file <- "../inst/extdata/score_sweep_summary.rds"
+}
+
+raw_file <- system.file("extdata", "score_sweep_results.rds",
+                        package = "gsDesignNB")
+if (raw_file == "" && file.exists("../inst/extdata/score_sweep_results.rds")) {
+  raw_file <- "../inst/extdata/score_sweep_results.rds"
+}
+
+if (summary_file != "") {
+  res <- readRDS(summary_file)
+  using_summary_cache <- TRUE
+} else if (raw_file != "") {
+  res <- readRDS(raw_file)
+  using_summary_cache <- FALSE
+} else {
+  stop("Precomputed score sweep summary not found.")
+}
+config <- res$config
+scenarios <- as.data.table(res$scenarios)
+base_grid <- as.data.table(res$base_grid)
+```
+
+```{r}
+cat(sprintf(
+  "Expanded scenarios: %d | Power sims: %s | Null sims: %s | RR: %.2f | alpha: %.3f\n",
+  nrow(scenarios),
+  format(config$n_sims_power, big.mark = ","),
+  format(config$n_sims_null, big.mark = ","),
+  config$rr_power,
+  config$alpha
+))
+cat(sprintf(
+  "Cache: %s\n",
+  if (using_summary_cache) "compact summary" else "full raw simulation output"
+))
+```
+
+### Scenario grid
+
+The base scenario grid varies control event rate ($\lambda_1$), overdispersion ($k$),
+and minimum inter-event gap. For each base scenario, sample sizes are computed using
+both the Wald and score variance formulas. In this superiority grid the score-sized
+trials are equal to or slightly smaller than the Wald-sized trials; score sizing is
+therefore not a generic "add a few subjects" rule, and the operating characteristics
+still need to be checked under the planned analysis test.
+
+```{r}
+base_display <- base_grid[, .(
+  `Control rate` = lambda1,
+  `Dispersion (k)` = k,
+  `Event gap (days)` = gap_days,
+  `N (Wald sizing)` = n_wald,
+  `N (Score sizing)` = n_score,
+  `Wald - Score` = n_wald - n_score
+)]
+
+knitr::kable(
+  base_display,
+  caption = "Base scenario grid with sample sizes by method",
+  digits = 2
+)
+```
+
+## Type I error comparison
+
+```{r}
+null_dt <- as.data.table(res$null_summary)
+null_long <- melt(
+  null_dt,
+  id.vars = c("lambda1", "k", "gap_days", "n_total", "sizing"),
+  measure.vars = c("rate_wald", "rate_score"),
+  variable.name = "test",
+  value.name = "rejection_rate"
+)
+null_long[, test := fifelse(test == "rate_wald", "Wald", "Score")]
+
+se_long <- melt(
+  null_dt,
+  id.vars = c("lambda1", "k", "gap_days", "sizing"),
+  measure.vars = c("se_wald", "se_score"),
+  variable.name = "test",
+  value.name = "se"
+)
+se_long[, test := fifelse(test == "se_wald", "Wald", "Score")]
+null_long <- merge(null_long, se_long,
+                   by = c("lambda1", "k", "gap_days", "sizing", "test"))
+null_long[, combo := paste0(sizing, "-sized / ", test, " test")]
+null_long[, `:=`(
+  above_nominal_95 = rejection_rate - 1.96 * se > config$alpha,
+  below_nominal_95 = rejection_rate + 1.96 * se < config$alpha
+)]
+```
+
+```{r}
+type1_summary <- null_long[, .(
+  `Scenarios` = .N,
+  `Minimum` = min(rejection_rate),
+  `Mean` = mean(rejection_rate),
+  `Maximum` = max(rejection_rate),
+  `Above nominal beyond MC error` = sum(above_nominal_95),
+  `Below nominal beyond MC error` = sum(below_nominal_95)
+), by = .(`Sizing` = sizing, `Test` = test)]
+
+knitr::kable(
+  type1_summary[order(Sizing, Test)],
+  caption = "Type I error synopsis across the scenario grid",
+  digits = 4
+)
+```
+
+```{r}
+null_display <- null_long[order(lambda1, k, gap_days, sizing, test),
+  .(
+    `Control rate` = lambda1,
+    Dispersion = k,
+    `Gap (days)` = gap_days,
+    Sizing = sizing,
+    N = n_total,
+    Test = test,
+    `Type I error` = round(rejection_rate, 4),
+    SE = round(se, 4)
+  )
+]
+
+knitr::kable(
+  null_display,
+  caption = sprintf(
+    "Type I error rate: nominal alpha = %.3f, %s null sims/scenario",
+    config$alpha,
+    format(config$n_sims_null, big.mark = ",")
+  )
+)
+```
+
+```{r, fig.width=8, fig.height=6}
+null_long[, scenario := paste0("λ₁=", lambda1, " k=", k)]
+
+p_null <- ggplot(null_long,
+  aes(x = scenario, y = rejection_rate,
+      color = combo, shape = test)) +
+  geom_point(size = 2.5, position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = rejection_rate - 1.96 * se,
+                     ymax = rejection_rate + 1.96 * se),
+                width = 0.2, position = position_dodge(width = 0.5)) +
+  geom_hline(yintercept = config$alpha, linetype = "dashed", color = "grey40") +
+  facet_wrap(~ paste0("Gap = ", gap_days, "d")) +
+  labs(
+    title = "Type I error: sizing method × test type",
+    x = NULL, y = "Rejection rate",
+    color = "Sizing / Test", shape = "Test"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+p_null
+```
+
+## Power comparison
+
+```{r}
+power_dt <- as.data.table(res$power_summary)
+power_long <- melt(
+  power_dt,
+  id.vars = c("lambda1", "k", "gap_days", "n_total", "sizing"),
+  measure.vars = c("rate_wald", "rate_score"),
+  variable.name = "test",
+  value.name = "power"
+)
+power_long[, test := fifelse(test == "rate_wald", "Wald", "Score")]
+
+se_power <- melt(
+  power_dt,
+  id.vars = c("lambda1", "k", "gap_days", "sizing"),
+  measure.vars = c("se_wald", "se_score"),
+  variable.name = "test",
+  value.name = "se"
+)
+se_power[, test := fifelse(test == "se_wald", "Wald", "Score")]
+power_long <- merge(power_long, se_power,
+                    by = c("lambda1", "k", "gap_days", "sizing", "test"))
+power_long[, combo := paste0(sizing, "-sized / ", test, " test")]
+```
+
+```{r}
+power_summary <- power_long[, .(
+  `Scenarios` = .N,
+  `Minimum` = min(power),
+  `Mean` = mean(power),
+  `Maximum` = max(power),
+  `Below 90%` = sum(power < config$power_target)
+), by = .(`Sizing` = sizing, `Test` = test)]
+
+knitr::kable(
+  power_summary[order(Sizing, Test)],
+  caption = "Power synopsis across the scenario grid",
+  digits = 4
+)
+```
+
+```{r}
+power_display <- power_long[order(lambda1, k, gap_days, sizing, test),
+  .(
+    `Control rate` = lambda1,
+    Dispersion = k,
+    `Gap (days)` = gap_days,
+    Sizing = sizing,
+    N = n_total,
+    Test = test,
+    Power = round(power, 4),
+    SE = round(se, 4)
+  )
+]
+
+knitr::kable(
+  power_display,
+  caption = sprintf(
+    "Power: RR = %.2f, %s power sims/scenario",
+    config$rr_power,
+    format(config$n_sims_power, big.mark = ",")
+  )
+)
+```
+
+```{r, fig.width=8, fig.height=6}
+power_long[, scenario := paste0("λ₁=", lambda1, " k=", k)]
+
+p_power <- ggplot(power_long,
+  aes(x = scenario, y = power,
+      color = combo, shape = test)) +
+  geom_point(size = 2.5, position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = power - 1.96 * se,
+                     ymax = power + 1.96 * se),
+                width = 0.2, position = position_dodge(width = 0.5)) +
+  geom_hline(yintercept = config$power_target, linetype = "dashed", color = "grey40") +
+  facet_wrap(~ paste0("Gap = ", gap_days, "d")) +
+  labs(
+    title = "Power: sizing method × test type",
+    subtitle = sprintf("Target = %.0f%%, RR = %.2f",
+                        100 * config$power_target, config$rr_power),
+    x = NULL, y = "Power",
+    color = "Sizing / Test", shape = "Test"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+p_power
+```
+
+## Z-score density comparison (null simulations)
+
+Under $H_0$, the Z-statistics should follow $N(0, 1)$ if the asymptotic approximation holds.
+
+```{r, fig.width=9, fig.height=7}
+if (!is.null(res$z_density_null)) {
+  z_density_null <- as.data.table(res$z_density_null)
+} else {
+  z_null <- as.data.table(res$z_sample_null)
+  sc_info <- data.table(
+    scenario_id = seq_len(nrow(scenarios)),
+    scenarios[, .(lambda1, k, gap_days, sizing)]
+  )
+  z_null <- merge(z_null, sc_info, by = "scenario_id")
+  z_null[, label := sprintf("l1=%.2f k=%.1f gap=%dd (%s)",
+                             lambda1, k, gap_days, sizing)]
+
+  z_null_long <- melt(
+    z_null,
+    id.vars = c("scenario_id", "label", "sizing"),
+    measure.vars = c("z_wald", "z_score"),
+    variable.name = "test",
+    value.name = "z"
+  )
+  z_null_long[, test := fifelse(test == "z_wald", "Wald", "Score")]
+  z_null_long <- z_null_long[is.finite(z)]
+
+  z_density_null <- z_null_long[, {
+    dens <- stats::density(z, from = -4, to = 4, n = 128)
+    .(z = dens$x, density = dens$y)
+  }, by = .(scenario_id, label, sizing, test)]
+}
+
+normal_curve <- data.table(
+  z = seq(-4, 4, length.out = 128),
+  density = dnorm(seq(-4, 4, length.out = 128))
+)
+
+p_z <- ggplot(z_density_null, aes(x = z, y = density, color = test)) +
+  geom_line(linewidth = 0.6) +
+  geom_line(data = normal_curve, aes(x = z, y = density),
+            inherit.aes = FALSE, color = "black", linetype = "dashed",
+            linewidth = 0.4) +
+  facet_wrap(~ label, scales = "free_y") +
+  labs(
+    title = "Null Z-score densities: Wald vs Score",
+    subtitle = "Dashed line = N(0,1) reference",
+    x = "Z-statistic", y = "Density",
+    color = "Test"
+  ) +
+  theme_minimal() +
+  coord_cartesian(xlim = c(-4, 4))
+
+p_z
+```
+
+## Fallback method frequency
+
+When the negative binomial MLE fails to converge or yields non-overdispersed estimates,
+`mutze_test()` falls back to Poisson or method-of-moments estimation.
+
+```{r}
+null_fb <- as.data.table(res$null_summary)
+fb_display <- null_fb[, .(
+  `Control rate` = lambda1,
+  Dispersion = k,
+  `Gap (days)` = gap_days,
+  Sizing = sizing,
+  `Poisson (Wald)` = round(pct_fallback_poisson_wald, 1),
+  `MoM (Wald)` = round(pct_fallback_mom_wald, 1),
+  `Poisson (Score)` = round(pct_fallback_poisson_score, 1),
+  `MoM (Score)` = round(pct_fallback_mom_score, 1)
+)]
+
+knitr::kable(
+  fb_display,
+  caption = "Fallback method frequency (%, null sims)",
+  digits = 1
+)
+```
+
+## Summary
+
+- The choice of final analysis test matters more than the choice of Wald versus score sizing in
+  this grid. Wald and score sample sizes differ by at most four subjects, while the null rejection
+  pattern changes materially when the test statistic changes.
+- The Wald test is mildly anti-conservative in several finite-sample scenarios. Across the grid,
+  its empirical Type I error ranges from `r round(min(null_long[test == "Wald"]$rejection_rate), 4)`
+  to `r round(max(null_long[test == "Wald"]$rejection_rate), 4)`, and many Wald cells are above
+  nominal beyond Monte Carlo error.
+- The score test provides better Type I protection. Its empirical Type I error ranges from
+  `r round(min(null_long[test == "Score"]$rejection_rate), 4)` to
+  `r round(max(null_long[test == "Score"]$rejection_rate), 4)`; no score-test cell is above
+  nominal beyond Monte Carlo error, although several are conservatively below nominal.
+- Use the Zhu--Lakkis / Friede--Schmidli / Mutze Wald formula when the planned primary analysis is
+  the Wald log-rate-ratio test. It is also a reasonable practical baseline when the planned primary
+  analysis is the score test, because in this superiority grid Wald sizing gives the score test a
+  small sample-size margin.
+- Move to the score-test workflow when Type I error preservation is the primary concern, especially
+  for lower-information designs, high dispersion, event gaps, non-inferiority or super-superiority
+  margins, or adaptive/group sequential settings. In that workflow, analyze and simulate with
+  `mutze_test(test_type = "score")`, `sim_gs_nbinom(test_type = "score")`, or
+  `sim_ssr_nbinom(test_type = "score")`; compare Wald and score sizing rather than assuming the
+  two-variance score formula will automatically deliver nominal power.
+- Score-test power is slightly conservative in this grid. If the score test is the planned primary
+  analysis, verify power by simulation and consider retaining Wald sizing, increasing the target
+  power, or adding a modest information margin before finalizing the protocol.

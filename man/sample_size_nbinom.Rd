@@ -2,7 +2,7 @@
 % Please edit documentation in R/sample_size_nbinom.R
 \name{sample_size_nbinom}
 \alias{sample_size_nbinom}
-\title{Sample size calculation for negative binomial distribution}
+\title{Sample size calculation for negative binomial outcomes}
 \usage{
 sample_size_nbinom(
   lambda1,
@@ -18,74 +18,180 @@ sample_size_nbinom(
   trial_duration,
   dropout_rate = 0,
   max_followup = NULL,
+  test_type = c("wald", "score"),
   event_gap = NULL
 )
 }
 \arguments{
-\item{lambda1}{Rate in group 1 (control).}
+\item{lambda1}{Event rate for group 1 (control), in events per unit time.}
 
-\item{lambda2}{Rate in group 2 (treatment).}
+\item{lambda2}{Event rate for group 2 (treatment), in events per unit time.}
 
-\item{dispersion}{Dispersion parameter \code{k} such that \eqn{\mathrm{Var}(Y) = \mu + k \mu^2}.
-Note that this is equivalent to \code{1/size} in R's \code{\link[stats:NegBinomial]{stats::rnbinom()}} parameterization.}
+\item{dispersion}{Dispersion parameter \eqn{k} such that
+\eqn{\mathrm{Var}(Y) = \mu + k\mu^2}.
+Equivalent to \code{1/size} in \code{\link[stats:rnbinom]{stats::rnbinom()}}. Can be a scalar (common
+dispersion) or a vector of length 2 (group-specific: control, treatment).}
 
-\item{power}{Power of the test (1 - beta). Default is 0.9.}
+\item{power}{Target power (\eqn{1 - \beta}). If \code{NULL}, power is computed
+for the given accrual rates (no sample size scaling). Default is 0.9.}
 
 \item{alpha}{Significance level. Default is 0.025.}
 
-\item{sided}{One-sided or two-sided test. 1 for one-sided, 2 for two-sided. Default is 1.}
+\item{sided}{Number of sides for the test: 1 (one-sided) or 2 (two-sided).
+Default is 1.}
 
-\item{ratio}{Allocation ratio n2/n1. Default is 1.}
+\item{ratio}{Allocation ratio \eqn{r = n_2/n_1}. Default is 1 (equal
+allocation).}
 
-\item{rr0}{Rate ratio under the null hypothesis (lambda2/lambda1).
-Default is 1 (superiority).
+\item{rr0}{Rate ratio under the null hypothesis
+(\eqn{\lambda_2 / \lambda_1}). Default is 1 (superiority).
 For non-inferiority, use a value > 1 (e.g., 1.1).
 For super-superiority, use a value < 1 (e.g., 0.8).}
 
-\item{accrual_rate}{Vector of accrual rates (patients per unit time).}
+\item{accrual_rate}{Vector of accrual rates (patients per unit time) for
+each recruitment segment.}
 
-\item{accrual_duration}{Vector of durations for each accrual rate. Must be same length
-as \code{accrual_rate}.}
+\item{accrual_duration}{Vector of durations for each accrual segment.
+Must be the same length as \code{accrual_rate}.}
 
-\item{trial_duration}{Total planned duration of the trial. If \code{trial_duration}
-is less than the sum of \code{accrual_duration}, accrual is truncated at
-\code{trial_duration}.}
+\item{trial_duration}{Total planned duration of the trial. If
+\code{trial_duration} is less than the sum of \code{accrual_duration}, accrual
+is truncated at \code{trial_duration}.}
 
-\item{dropout_rate}{Dropout rate (hazard rate). Default is 0. Can be a vector of length 2.}
+\item{dropout_rate}{Dropout hazard rate. Can be:
+\itemize{
+\item A scalar (common constant rate for both groups). Default is 0.
+\item A vector of length 2 (group-specific constant rates: control,
+treatment).
+\item A data frame with columns \code{rate} and \code{duration} (and optionally
+\code{treatment}) defining piecewise constant dropout hazards. When a
+\code{treatment} column is present, use 1 for control and 2 for treatment.
+Without a \code{treatment} column, the same piecewise schedule applies to
+both groups. The last \code{duration} may be \code{Inf} to extend the final rate
+indefinitely.
+}}
 
-\item{max_followup}{Maximum follow-up time for any patient. Default is NULL (infinite).}
+\item{max_followup}{Maximum follow-up time for any patient. Default is
+\code{NULL} (infinite). Can be a vector of length 2 for group-specific caps.}
 
-\item{event_gap}{Gap duration after each event during which no new events are counted.
-Default is NULL (no gap). If provided, the effective event rate is reduced.}
+\item{test_type}{Type of test for which to size the study:
+\code{"wald"} (default) uses a single variance under the alternative;
+\code{"score"} uses separate null and alternative variances
+(\eqn{z_\alpha \sqrt{V_0} + z_\beta \sqrt{V_1}}).}
+
+\item{event_gap}{Gap duration after each event during which no new events
+are counted (e.g., a recovery period). Default is \code{NULL} (no gap).
+When specified, the effective rate is reduced to
+\eqn{\lambda_{\mathrm{eff}} = \lambda / (1 + \lambda \cdot \mathrm{gap})}.}
 }
 \value{
-An object of class \code{sample_size_nbinom_result}, which is a list containing:
+An object of class \code{sample_size_nbinom_result}, which is a list
+containing:
 \describe{
 \item{inputs}{Named list of the original function arguments.}
-\item{n1}{Sample size for group 1}
-\item{n2}{Sample size for group 2}
-\item{n_total}{Total sample size}
-\item{alpha}{Significance level}
-\item{sided}{One-sided or two-sided test}
-\item{power}{Power of the test}
-\item{exposure}{Average exposure time used in calculation (calendar time). Vector of length 2.}
-\item{exposure_at_risk_n1}{Average at-risk exposure time for group 1 (accounts for event gap)}
-\item{exposure_at_risk_n2}{Average at-risk exposure time for group 2 (accounts for event gap)}
-\item{events_n1}{Expected number of events in group 1}
-\item{events_n2}{Expected number of events in group 2}
-\item{total_events}{Total expected number of events}
-\item{variance}{Variance of the log rate ratio}
-\item{accrual_rate}{Accrual rate used in calculation}
-\item{accrual_duration}{Accrual duration used in calculation}
+\item{n1}{Sample size for group 1 (control).}
+\item{n2}{Sample size for group 2 (treatment).}
+\item{n_total}{Total sample size (\eqn{n_1 + n_2}).}
+\item{alpha}{Significance level used.}
+\item{sided}{One-sided or two-sided test.}
+\item{power}{Power of the test.}
+\item{exposure}{Average calendar exposure \eqn{\bar{t}_g} (vector of
+length 2 for control and treatment).}
+\item{exposure_at_risk_n1}{Average at-risk exposure for group 1
+(adjusted for event gap).}
+\item{exposure_at_risk_n2}{Average at-risk exposure for group 2
+(adjusted for event gap).}
+\item{events_n1}{Expected number of events in group 1.}
+\item{events_n2}{Expected number of events in group 2.}
+\item{total_events}{Total expected number of events.}
+\item{variance}{Variance of the log rate ratio
+\eqn{\mathrm{Var}(\hat\theta)}.}
+\item{variance_null}{Null variance of the log rate ratio used for
+score-test sizing, on the same final-analysis scale as \code{variance}.}
+\item{accrual_rate}{Accrual rate(s) used (possibly scaled to achieve
+target power).}
+\item{accrual_duration}{Accrual duration(s) used.}
 }
 }
 \description{
-Computes the sample size for comparing two treatment groups assuming a negative
-binomial distribution for the outcome.
+Computes the sample size (or power) for comparing two treatment groups
+assuming negative binomial distributed event counts. When
+\code{test_type = "wald"} (default), the formula uses a single variance
+evaluated under the alternative, corresponding to Method 3 of
+Zhu & Lakkis (2014) and the formulas of Friede & Schmidli (2010)
+and Mutze et al. (2019). When \code{test_type = "score"}, separate null
+and alternative variances are used (Farrington & Manning style),
+aligning the calculation with the null-variance scale of the score test.
+In practice, the final test statistic affects Type I error more than the
+small difference between Wald and score sizing, so score-test designs should
+be checked by simulation for both Type I error and power.
+}
+\details{
+\subsection{Sample size formula}{
+
+\strong{Wald test} (\code{test_type = "wald"}):
+\deqn{n_1 = \frac{(z_{\alpha/s} + z_\beta)^2 V_1}{(\theta - \theta_0)^2}}
+
+\strong{Score test} (\code{test_type = "score"}):
+\deqn{n_1 = \frac{(z_{\alpha/s} \sqrt{V_0} + z_\beta \sqrt{V_1})^2}{(\theta - \theta_0)^2}}
+
+where \eqn{\theta = \log(\lambda_2/\lambda_1)},
+\eqn{\theta_0 = \log(\mathrm{rr}_0)}, and:
+\deqn{V_1 = \left(\frac{1}{\mu_1} + k_1\right) + \frac{1}{r}\left(\frac{1}{\mu_2} + k_2\right)}
+is the variance under \eqn{H_1}. Under \eqn{H_0} (pooled rate
+\eqn{\lambda_0 = (\lambda_1 + r \lambda_2 \mathrm{rr}_0) / (1 + r)}):
+\deqn{V_0 = \left(\frac{1}{\mu_0} + k_0\right)\left(1 + \frac{1}{r}\right)}
+with \eqn{\mu_g = \lambda_g \bar{t}_g} the expected event count and
+\eqn{\bar{t}_g} the average exposure for group \eqn{g}.
+
+In superiority settings, the traditional Wald/Zhu-Lakkis sample size may be
+slightly larger than score sizing and can provide a useful power margin when
+the final analysis uses the score test. Compare both sizing rules and verify
+the chosen design with simulation when finite-sample calibration matters.
+}
+
+\subsection{Average exposure}{
+
+The average exposure \eqn{\bar{t}_g} accounts for piecewise accrual,
+piecewise exponential dropout, and maximum follow-up truncation. With
+piecewise constant dropout hazards \eqn{\delta_1, \delta_2, \ldots}
+over successive intervals, the survival function is
+\eqn{S(t) = \exp(-\sum_j \delta_j \ell_j)} where \eqn{\ell_j} is the
+time spent in interval \eqn{j}. The expected exposure for a patient with
+potential follow-up \eqn{u} is \eqn{m(u) = \int_0^u S(t)\,dt}, computed
+as a sum of exponential integrals over each piece. For a single constant
+rate \eqn{\delta > 0} this simplifies to
+\eqn{m(u) = (1 - e^{-\delta u})/\delta}.
+The overall average is a weighted mean across accrual segments.
+}
+
+\subsection{Variance inflation}{
+
+When follow-up times are variable, the dispersion is inflated by a factor
+\eqn{Q_g = \mathrm{E}[t_g^2] / (\mathrm{E}[t_g])^2 \ge 1} (Zhu & Lakkis,
+2014) to account for the non-linear dependence of the NB variance on
+exposure.
+}
+
+\subsection{Event gap correction (Jensen's inequality)}{
+
+When \code{event_gap} > 0, the naive effective rate
+\eqn{\lambda / (1 + \lambda g)} overestimates the true population-level
+effective rate because of subject-level heterogeneity (frailty).
+In the Gamma-Poisson mixture, each subject's rate
+\eqn{\Lambda_i \sim \mathrm{Gamma}(1/k, k\lambda)} is random.
+Since \eqn{f(x) = x/(1+xg)} is concave, Jensen's inequality gives
+\eqn{\mathrm{E}[f(\Lambda)] < f(\mathrm{E}[\Lambda])}.
+
+A second-order Taylor correction is applied:
+\deqn{\lambda_{\mathrm{eff}} \approx \frac{\lambda}{1+\lambda g}
+  \left(1 - \frac{k \lambda g}{(1+\lambda g)^2}\right)}
+This uses \eqn{f''(\lambda) = -2g/(1+\lambda g)^3} and
+\eqn{\mathrm{Var}(\Lambda) = k\lambda^2}.
+}
 }
 \examples{
-# Calculate sample size for lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1
-# with fixed recruitment of 10/month for 20 months, 24 month trial duration
+# Basic sample size calculation
 x <- sample_size_nbinom(
   lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
   accrual_rate = 10, accrual_duration = 20, trial_duration = 24
@@ -94,14 +200,18 @@ class(x)
 summary(x)
 
 # With piecewise accrual
-# 5 patients/month for 3 months, then 10 patients/month for 3 months
-# Trial ends at month 12.
 x2 <- sample_size_nbinom(
   lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
   accrual_rate = c(5, 10), accrual_duration = c(3, 3),
   trial_duration = 12
 )
 summary(x2)
+
+# Compute power for a fixed design (power = NULL)
+sample_size_nbinom(
+  lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = NULL,
+  accrual_rate = 10, accrual_duration = 20, trial_duration = 24
+)
 }
 \references{
 Zhu, H., & Lakkis, H. (2014).
@@ -115,12 +225,15 @@ superiority and non-inferiority trials.
 \emph{Methods of Information in Medicine},
 49(06), 618--624. \doi{10.3414/ME09-02-0060}
 
-Mütze, T., Glimm, E., Schmidli, H., & Friede, T. (2019).
+Mutze, T., Glimm, E., Schmidli, H., & Friede, T. (2019).
 Group sequential designs for negative binomial outcomes.
 \emph{Statistical Methods in Medical Research},
 28(8), 2326--2347. \doi{10.1177/0962280218773115}
 }
 \seealso{
-\code{vignette("sample-size-nbinom", package = "gsDesignNB")}
-for a detailed explanation of the methodology.
+\code{\link[=compute_info_at_time]{compute_info_at_time()}} for computing statistical information at a given
+analysis time; \code{\link[=blinded_ssr]{blinded_ssr()}} for blinded sample size reestimation;
+\code{\link[=gsNBCalendar]{gsNBCalendar()}} for group sequential designs;
+\code{vignette("sample-size-nbinom", package = "gsDesignNB")} for detailed
+methodology.
 }

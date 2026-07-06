@@ -10,7 +10,6 @@ library(gsDesign)
 library(data.table)
 library(MASS)
 library(gt)
-library(gt)
 
 ## ----initial_design-----------------------------------------------------------
 # Planned parameters
@@ -67,6 +66,35 @@ gsBoundSummary(gs_plan,
       "N = ", ceiling(gs_plan$n_total[gs_plan$k]),
       ", Expected events = ", round(gs_plan$nb_design$total_events, 1)
     )
+  )
+
+## ----helper_workflow----------------------------------------------------------
+sim_helper <- sim_ssr_nbinom(
+  n_sims = 20,
+  enroll_rate = data.frame(rate = accrual_rate_plan, duration = accrual_dur_plan * 2),
+  fail_rate = data.frame(
+    treatment = c("Control", "Experimental"),
+    rate = c(0.08, 0.06),
+    dispersion = 0.65
+  ),
+  dropout_rate = data.frame(
+    treatment = c("Control", "Experimental"),
+    rate = c(0, 0),
+    duration = c(100, 100)
+  ),
+  max_followup = trial_dur_plan,
+  design = gs_plan,
+  n_max = ceiling(1.4 * gs_plan$n_total[gs_plan$k]),
+  metadata = list(scenario = "Lower control rate, higher dispersion"),
+  seed = 1234
+)
+
+helper_summary <- summarize_ssr_sim(sim_helper, by = c("scenario", "strategy"))
+helper_summary$trial_summary |>
+  gt() |>
+  tab_header(
+    title = "High-level SSR Simulation Summary",
+    subtitle = "Expected participants with events and expected events observed are included directly"
   )
 
 ## ----simulation---------------------------------------------------------------

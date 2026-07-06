@@ -23,7 +23,6 @@ trial_duration <- 24
 event_gap <- 20 / 30.42 # 20 days
 
 # Accrual targeting 90% power
-# We provide relative rates (1:2) and the function scales them to achieve power
 accrual_rate_rel <- c(1, 2)
 accrual_duration <- c(6, 6)
 
@@ -39,9 +38,6 @@ design <- sample_size_nbinom(
   event_gap = event_gap
 )
 
-# Extract calculated absolute accrual rates
-accrual_rate <- design$accrual_rate
-
 print(design)
 
 ## ----load_results-------------------------------------------------------------
@@ -55,14 +51,59 @@ if (results_file == "" && file.exists("../inst/extdata/simulation_results.rds"))
 if (results_file != "") {
   sim_data <- readRDS(results_file)
   results <- sim_data$results
+  results_naive <- sim_data$results_naive
   design_ref <- sim_data$design
+  n_full <- sim_data$n_full
+  n_naive <- sim_data$n_naive
 } else {
-  # Fallback if data is not available (e.g. not installed yet)
-  # This block allows the vignette to build without the data, but warns.
   warning("Simulation results not found. Skipping verification plots.")
   results <- NULL
+  results_naive <- NULL
   design_ref <- design
+  n_full <- design$n_total
+  n_naive <- 422L
 }
+
+## ----power_comparison, eval=!is.null(results)---------------------------------
+power_full <- mean(results$p_value < alpha, na.rm = TRUE)
+power_naive <- mean(results_naive$p_value < alpha, na.rm = TRUE)
+power_full_score <- mean(results$p_value_score < alpha, na.rm = TRUE)
+power_naive_score <- mean(results_naive$p_value_score < alpha, na.rm = TRUE)
+
+ci_full <- binom.test(sum(results$p_value < alpha, na.rm = TRUE), nrow(results))$conf.int
+ci_naive <- binom.test(sum(results_naive$p_value < alpha, na.rm = TRUE), nrow(results_naive))$conf.int
+ci_full_score <- binom.test(sum(results$p_value_score < alpha, na.rm = TRUE), nrow(results))$conf.int
+ci_naive_score <- binom.test(sum(results_naive$p_value_score < alpha, na.rm = TRUE), nrow(results_naive))$conf.int
+
+power_df <- data.frame(
+  Design = c(
+    paste0("Corrected (n = ", n_full, ")"),
+    paste0("Naive (n = ", n_naive, ")"),
+    paste0("Corrected (n = ", n_full, ")"),
+    paste0("Naive (n = ", n_naive, ")")
+  ),
+  Test = c("Wald", "Wald", "Score", "Score"),
+  Theoretical = rep(design_ref$power, 4),
+  Empirical = c(power_full, power_naive, power_full_score, power_naive_score),
+  CI_Lower = c(ci_full[1], ci_naive[1], ci_full_score[1], ci_naive_score[1]),
+  CI_Upper = c(ci_full[2], ci_naive[2], ci_full_score[2], ci_naive_score[2])
+)
+
+power_df |>
+  gt() |>
+  tab_header(
+    title = md("**Power Comparison: Wald vs Score Test**"),
+    subtitle = paste0("Based on ", nrow(results), " simulated trials")
+  ) |>
+  fmt_number(columns = c(Theoretical, Empirical, CI_Lower, CI_Upper), decimals = 4) |>
+  cols_label(
+    Design = "Design",
+    Test = "Test",
+    Theoretical = "Target",
+    Empirical = "Empirical",
+    CI_Lower = "95% CI Lower",
+    CI_Upper = "95% CI Upper"
+  )
 
 ## ----summary_table, eval=!is.null(results)------------------------------------
 # ---- Compute all metrics ----
@@ -71,26 +112,12 @@ if (results_file != "") {
 n_sims <- sum(!is.na(results$estimate))
 
 # Total Exposure (calendar follow-up time)
-# Note: exposure is the same for both arms in the design (by symmetry)
 theo_exposure <- design_ref$exposure[1]
 
-# Check which column names are available in the results
-# (Support both old and new naming conventions)
-has_new_cols <- "exposure_total_control" %in% names(results)
-
-if (has_new_cols) {
-  obs_exposure_ctrl <- mean(results$exposure_total_control)
-  obs_exposure_exp <- mean(results$exposure_total_experimental)
-  obs_exposure_at_risk_ctrl <- mean(results$exposure_at_risk_control)
-  obs_exposure_at_risk_exp <- mean(results$exposure_at_risk_experimental)
-} else {
-  # Legacy: old simulation used 'exposure_control' which was actually at-risk time
-  obs_exposure_ctrl <- NA
-
-  obs_exposure_exp <- NA
-  obs_exposure_at_risk_ctrl <- mean(results$exposure_control)
-  obs_exposure_at_risk_exp <- mean(results$exposure_experimental)
-}
+obs_exposure_ctrl <- mean(results$exposure_total_control)
+obs_exposure_exp <- mean(results$exposure_total_experimental)
+obs_exposure_at_risk_ctrl <- mean(results$exposure_at_risk_control)
+obs_exposure_at_risk_exp <- mean(results$exposure_at_risk_experimental)
 
 # Exposure at risk (time at risk excluding event gaps)
 theo_exposure_at_risk_ctrl <- design_ref$exposure_at_risk_n1
@@ -109,20 +136,14 @@ mean_log_rr <- mean(results$estimate, na.rm = TRUE)
 
 # Variance
 theo_var <- design_ref$variance
-# Use median of SE^2 for robust estimate
 median_se_sq <- median(results$se^2, na.rm = TRUE)
-# Empirical variance of estimates
 emp_var <- var(results$estimate, na.rm = TRUE)
 
 # Power
 theo_power <- design_ref$power
 emp_power <- mean(results$p_value < design_ref$inputs$alpha, na.rm = TRUE)
 
-# Sample size reproduction
-z_alpha <- qnorm(1 - design_ref$inputs$alpha)
-z_beta <- qnorm(design_ref$inputs$power)
 n_sim_total <- design_ref$n_total
-n_reproduced <- n_sim_total * (emp_var * (z_alpha + z_beta)^2) / (mean_log_rr^2)
 
 # ---- Build summary table ----
 summary_df <- data.frame(
@@ -135,8 +156,7 @@ summary_df <- data.frame(
     "Events per Subject - Experimental",
     "Treatment Effect: log(RR)",
     "Variance of log(RR)",
-    "Power",
-    "Sample Size"
+    "Power"
   ),
   Theoretical = c(
     theo_exposure,
@@ -147,8 +167,7 @@ summary_df <- data.frame(
     theo_events_exp / (n_sim_total / 2),
     true_log_rr,
     theo_var,
-    theo_power,
-    n_sim_total
+    theo_power
   ),
   Simulated = c(
     obs_exposure_ctrl,
@@ -159,8 +178,7 @@ summary_df <- data.frame(
     obs_events_exp / (n_sim_total / 2),
     mean_log_rr,
     median_se_sq,
-    emp_power,
-    n_reproduced
+    emp_power
   ),
   stringsAsFactors = FALSE
 )
@@ -172,11 +190,7 @@ summary_df |>
   gt() |>
   tab_header(
     title = md("**Verification of sample_size_nbinom() Predictions**"),
-    subtitle = paste0("Based on ", n_sims, " simulated trials")
-  ) |>
-  tab_row_group(
-    label = md("**Sample Size**"),
-    rows = Metric == "Sample Size"
+    subtitle = paste0("Based on ", n_sims, " simulated trials (n = ", n_sim_total, ")")
   ) |>
   tab_row_group(
     label = md("**Power**"),
@@ -199,7 +213,7 @@ summary_df |>
     rows = grepl("Exposure", Metric)
   ) |>
   row_group_order(groups = c("**Exposure**", "**Events**", "**Treatment Effect**",
-                              "**Variance**", "**Power**", "**Sample Size**")) |>
+                              "**Variance**", "**Power**")) |>
   fmt_number(columns = c(Theoretical, Simulated, Difference), decimals = 4) |>
   fmt_number(columns = Rel_Diff_Pct, decimals = 2) |>
   cols_label(
@@ -211,31 +225,14 @@ summary_df |>
   ) |>
   sub_missing(missing_text = "—")
 
-## ----power_ci, eval=!is.null(results)-----------------------------------------
-power_ci <- binom.test(sum(results$p_value < design_ref$inputs$alpha, na.rm = TRUE), 
-   nrow(results))$conf.int
-cat("95% CI for empirical power: [", round(power_ci[1], 4), ", ", round(power_ci[2], 4), "]\n", sep = "")
-cat("Theoretical power:", round(theo_power, 4), "\n")
-
 ## ----z_score_dist, eval=!is.null(results)-------------------------------------
-# Calculate Z-scores using estimated variance (Wald statistic)
-# Z = (hat(delta) - 0) / SE_est
 z_scores <- results$estimate / results$se
 
-# Theoretical mean Z-score under the alternative
-# E[Z] = log(RR) / sqrt(V_theo)
 theo_se <- sqrt(theo_var)
 theo_mean_z <- log(lambda2 / lambda1) / theo_se
-
-# Critical value for 1-sided alpha (since we are looking at lower tail for RR < 1)
-# However, the Z-scores here are negative (log(0.3/0.4) < 0).
-# Rejection region is Z < qnorm(alpha)
 crit_val <- qnorm(design_ref$inputs$alpha)
-
-# Proportion of simulations rejecting the null
 prop_reject <- mean(z_scores < crit_val, na.rm = TRUE)
 
-# Plot
 ggplot(data.frame(z = z_scores), aes(x = z)) +
   geom_density(aes(color = "Simulated Density"), linewidth = 1) +
   stat_function(
@@ -253,7 +250,7 @@ ggplot(data.frame(z = z_scores), aes(x = z)) +
     hjust = 0, vjust = 0
   ) +
   labs(
-    title = "Distribution of Wald Z-scores",
+    title = "Distribution of Wald Z-scores (corrected design)",
     subtitle = paste("Theoretical Mean Z =", round(theo_mean_z, 3)),
     x = "Z-score (Estimate / Estimated SE)",
     y = "Density",
@@ -262,17 +259,42 @@ ggplot(data.frame(z = z_scores), aes(x = z)) +
   theme_minimal() +
   theme(legend.position = "top")
 
+## ----z_score_comparison, eval=!is.null(results) && "z_score" %in% names(results)----
+z_wald <- results$estimate / results$se
+z_score <- results$z_score
+
+z_df <- data.frame(
+  z = c(z_wald, z_score),
+  Test = rep(c("Wald", "Score"), each = length(z_wald))
+)
+
+ggplot(z_df, aes(x = z, color = Test)) +
+  geom_density(linewidth = 1) +
+  stat_function(
+    fun = dnorm,
+    args = list(mean = theo_mean_z, sd = 1),
+    linewidth = 0.8,
+    linetype = "dashed",
+    color = "grey40"
+  ) +
+  geom_vline(xintercept = crit_val, linetype = "dotted", color = "black") +
+  labs(
+    title = "Z-score Distribution: Wald vs Score (corrected design)",
+    subtitle = paste0("Dashed = theoretical N(", round(theo_mean_z, 2), ", 1)"),
+    x = "Z-score",
+    y = "Density",
+    color = "Test"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "top")
+
 ## ----log_rr_stats, eval=!is.null(results)-------------------------------------
-# Theoretical mean and SD of log(RR)
-# Let's also add median, skewness, and kurtosis
 theo_mean_log_rr <- log(lambda2 / lambda1)
 theo_sd_log_rr <- sqrt(theo_var)
 emp_mean_log_rr <- mean(results$estimate, na.rm = TRUE)
 emp_sd_log_rr <- sd(results$estimate, na.rm = TRUE)
 emp_median_log_rr <- median(results$estimate, na.rm = TRUE)
 
-# Skewness and Kurtosis (using trimmed data to reduce outlier influence)
-# Trim extreme 1% on each tail for robust estimates
 ests <- results$estimate[!is.na(results$estimate)]
 q_low <- quantile(ests, 0.01)
 q_high <- quantile(ests, 0.99)
@@ -296,9 +318,128 @@ comparison_log_rr <- data.frame(
     emp_kurt_log_rr - 3
   )
 )
-# Display table
 comparison_log_rr |>
   gt() |>
   tab_header(title = md("**Comparison of log(RR) Statistics**")) |>
   fmt_number(columns = where(is.numeric), decimals = 4)
+
+## ----load_null----------------------------------------------------------------
+null_file <- system.file("extdata", "null_simulation_results.rds", package = "gsDesignNB")
+if (null_file == "" && file.exists("../inst/extdata/null_simulation_results.rds")) {
+  null_file <- "../inst/extdata/null_simulation_results.rds"
+}
+has_null <- null_file != ""
+if (has_null) {
+  null_data <- readRDS(null_file)
+  results_null <- null_data$results_null
+}
+
+## ----type1_table, eval=has_null-----------------------------------------------
+type1_wald <- mean(results_null$p_value_wald < alpha, na.rm = TRUE)
+type1_score <- mean(results_null$p_value_score < alpha, na.rm = TRUE)
+
+n_null <- sum(!is.na(results_null$p_value_wald))
+ci_wald <- binom.test(sum(results_null$p_value_wald < alpha, na.rm = TRUE), n_null)$conf.int
+ci_score <- binom.test(sum(results_null$p_value_score < alpha, na.rm = TRUE), n_null)$conf.int
+
+type1_df <- data.frame(
+  Test = c("Wald (ML)", "Score (null model)"),
+  Nominal = c(alpha, alpha),
+  Empirical = c(type1_wald, type1_score),
+  CI_Lower = c(ci_wald[1], ci_score[1]),
+  CI_Upper = c(ci_wald[2], ci_score[2])
+)
+
+type1_df |>
+  gt() |>
+  tab_header(
+    title = md("**Type I Error: Wald vs Score Test Under RR = 1**"),
+    subtitle = paste0("Based on ", n_null, " simulated null trials (n = ", null_data$n_total, ")")
+  ) |>
+  fmt_number(columns = c(Nominal, Empirical, CI_Lower, CI_Upper), decimals = 4) |>
+  cols_label(
+    Test = "Test",
+    Nominal = "Nominal α",
+    Empirical = "Empirical",
+    CI_Lower = "95% CI Lower",
+    CI_Upper = "95% CI Upper"
+  )
+
+## ----type1_z_density, eval=has_null-------------------------------------------
+z_null_df <- data.frame(
+  z = c(results_null$z_wald, results_null$z_score),
+  Test = rep(c("Wald", "Score"), each = nrow(results_null))
+)
+
+ggplot(z_null_df, aes(x = z, color = Test)) +
+  geom_density(linewidth = 1) +
+  stat_function(
+    fun = dnorm, args = list(mean = 0, sd = 1),
+    linewidth = 0.8, linetype = "dashed", color = "grey40"
+  ) +
+  geom_vline(xintercept = qnorm(alpha), linetype = "dotted", color = "black") +
+  annotate("text", x = qnorm(alpha), y = 0.02,
+           label = paste0("  α = ", alpha), hjust = 0) +
+  labs(
+    title = "Null Z-score Distribution: Wald vs Score",
+    subtitle = "Dashed = N(0, 1) reference",
+    x = "Z-score",
+    y = "Density",
+    color = "Test"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "top")
+
+## ----load_sweep---------------------------------------------------------------
+sweep_file <- system.file("extdata", "scenario_sweep_results.rds", package = "gsDesignNB")
+if (sweep_file == "" && file.exists("../inst/extdata/scenario_sweep_results.rds")) {
+  sweep_file <- "../inst/extdata/scenario_sweep_results.rds"
+}
+has_sweep <- sweep_file != ""
+if (has_sweep) {
+  sweep <- readRDS(sweep_file)
+}
+
+## ----sweep_table, eval=has_sweep----------------------------------------------
+# sweep_display <- data.frame(
+#   Scenario = sprintf("k = %.1f, gap = %d days", sweep$k, sweep$gap_days),
+#   `n (corrected)` = sweep$n_corrected,
+#   `n (naive)` = sweep$n_naive,
+#   `Extra subjects` = sweep$n_diff,
+#   `Power (corrected)` = sweep$power_corrected,
+#   `Power (naive)` = sweep$power_naive,
+#   `Difference` = sprintf("%.2f ± %.2f", 100 * sweep$power_diff, 100 * 1.96 * sweep$power_diff_se),
+#   check.names = FALSE
+# )
+# 
+# sweep_display |>
+#   gt() |>
+#   tab_header(
+#     title = md("**Impact of Jensen Correction Across Scenarios**"),
+#     subtitle = "10,000 replicates per scenario; power difference is paired (95% CI)"
+#   ) |>
+#   fmt_number(columns = c(`Power (corrected)`, `Power (naive)`), decimals = 4) |>
+#   cols_label(
+#     Scenario = "Scenario",
+#     `n (corrected)` = "n (corr.)",
+#     `n (naive)` = "n (naive)",
+#     `Extra subjects` = "Δn",
+#     `Power (corrected)` = "Power (corr.)",
+#     `Power (naive)` = "Power (naive)",
+#     Difference = "Diff (pp) ± 95% CI"
+#   )
+
+## ----sweep_interpretation, eval=has_sweep, results='asis'---------------------
+# cat("**Key findings:**\n\n")
+# cat("*   The corrected design achieves power at or above the 90% target in **all** scenarios.\n")
+# cat("*   The naive design falls below 90% in **three of four** scenarios, with the shortfall increasing as $k$ and $g$ grow.\n")
+# cat(sprintf("*   The largest paired power difference is %.1f percentage points ($k = %.1f$, gap = %d days), ",
+#     100 * sweep$power_diff[which.max(sweep$power_diff)],
+#     sweep$k[which.max(sweep$power_diff)],
+#     sweep$gap_days[which.max(sweep$power_diff)]))
+# cat(sprintf("where the corrected design adds %d subjects.\n",
+#     sweep$n_diff[which.max(sweep$power_diff)]))
+# cat(sprintf("*   All paired differences are statistically significant (discordant pair ratios range from %.1f:1 to %.1f:1 in favor of the corrected design).\n",
+#     min(sweep$corr_only / sweep$naive_only),
+#     max(sweep$corr_only / sweep$naive_only)))
 

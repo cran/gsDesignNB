@@ -84,14 +84,14 @@ summary_stats |>
 ## -----------------------------------------------------------------------------
 head(sim_data, 10)
 
-## ----fig.width=7, fig.height=5, fig.alt="Patient timelines with events (dots), 30-day gaps (gray segments), and censoring (X)"----
+## ----fig.width=7, fig.height=5, fig.alt="Patient timelines with events (dots), 20-day gaps (gray segments), and censoring (X)"----
 sim_plot <- as.data.frame(sim_data)
 names(sim_plot) <- make.names(names(sim_plot), unique = TRUE)
 events_df <- sim_plot[sim_plot$event == 1, ]
 censor_df <- sim_plot[sim_plot$event == 0, ]
 
-# Define a 30-day gap for visualization (default is usually 5 days)
-gap_duration <- 30 / 365.25
+# Define a 20-day gap for visualization
+gap_duration <- 20 / 365.25
 
 # Create segments for the gap after each event
 events_df$gap_start <- events_df$tte
@@ -111,7 +111,7 @@ ggplot(sim_plot, aes(x = tte, y = factor(id), color = treatment)) +
     title = "Patient Timelines",
     x = "Time from Randomization (Years)",
     y = "Patient ID",
-    caption = "Dots = Events, Gray Bars = 30-day Gap, X = Censoring/Dropout"
+    caption = "Dots = Events, Gray Bars = 20-day Gap, X = Censoring/Dropout"
   ) +
   theme_minimal()
 
@@ -150,12 +150,12 @@ enroll_rate_nb <- data.frame(
 )
 
 set.seed(1)
-# Simulate 50000 subjects to get a stable estimate
+# Simulate 10000 subjects for a quick local review build
 sim_nb <- nb_sim(
   enroll_rate = enroll_rate_nb,
   fail_rate = fail_rate_nb,
   max_followup = 1,
-  n = 50000,
+  n = 10000,
   block = "Control" # Assign all to Control for simplicity
 )
 

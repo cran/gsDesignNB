@@ -1,0 +1,2247 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Published sample-size examples with the gsDesignNB AI skill</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<style type="text/css">
+
+div.csl-bib-body { }
+div.csl-entry {
+clear: both;
+margin-bottom: 0em;
+}
+.hanging div.csl-entry {
+margin-left:2em;
+text-indent:-2em;
+}
+div.csl-left-margin {
+min-width:2em;
+float:left;
+}
+div.csl-right-inline {
+margin-left:2em;
+padding-left:1em;
+}
+div.csl-indent {
+margin-left: 2em;
+}
+</style>
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Published sample-size examples with the
+gsDesignNB AI skill</h1>
+
+
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(gsDesignNB)</span></code></pre></div>
+<div id="purpose" class="section level2">
+<h2>Purpose</h2>
+<p>This vignette demonstrates how the <code>SKILL.md</code> file in the
+<strong>gsDesignNB</strong> repository helps an AI coding assistant turn
+natural-language trial descriptions into transparent
+<code>sample_size_nbinom()</code> calls. The examples are not meant to
+replace the original protocols or statistical review; they show how the
+skill keeps the translation from text to code disciplined. The skill
+teaches the AI to:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Extract</strong> stated parameters from the text.</li>
+<li><strong>Prompt</strong> for essential information that is
+missing.</li>
+<li><strong>Apply sensible defaults</strong> for non-essential
+parameters.</li>
+<li><strong>Handle ambiguities</strong> (dropout meaning, <span class="math inline">\(k\)</span> parameterization).</li>
+<li><strong>Compute and report</strong> the sample size with full
+transparency.</li>
+</ol>
+</div>
+<div id="what-is-a-skill-file" class="section level2">
+<h2>What is a skill file?</h2>
+<p>A <em>skill file</em> (<code>SKILL.md</code>) is a structured
+document that teaches an AI assistant domain-specific knowledge — in
+this case, how to translate a clinical trial description into a
+<code>sample_size_nbinom()</code> call. Unlike a general prompt, a skill
+file encodes parameter extraction rules, validation checks,
+unit-conversion logic, and domain heuristics (e.g., “COPD dispersion is
+typically 0.5–1.0”) so that the AI can work reliably without requiring
+the user to know the package API.</p>
+<p>The main <strong>gsDesignNB</strong> skill covers sample size
+calculation, group sequential design, blinded SSR, simulation, and
+interim data cuts. This vignette focuses on the sample size
+workflow.</p>
+</div>
+<div id="using-the-skill-with-an-ai-assistant" class="section level2">
+<h2>Using the skill with an AI assistant</h2>
+<p>In the source repository, the main skill lives at
+<code>.agents/skills/gsdesignnb/SKILL.md</code>. A companion simulation
+entrypoint lives at
+<code>.agents/skills/gsdesignnb-simulation-entrypoint/SKILL.md</code>.</p>
+<p>How you provide the skill depends on the assistant. Workspace-aware
+coding assistants may discover the file automatically when the
+repository is open. For assistants that accept attached files, project
+knowledge, or system instructions, attach or paste
+<code>SKILL.md</code>, then provide the trial description in natural
+language.</p>
+<p>The skill is model-agnostic — it uses structured Markdown with
+extraction tables, decision rules, and worked examples that any
+instruction-following LLM can interpret.</p>
+</div>
+<div id="overview-of-examples" class="section level2">
+<h2>Overview of examples</h2>
+<p>The examples span three disease areas, four published trial
+protocols, and two methodology papers — deliberately chosen to exercise
+different challenges the skill must handle:</p>
+<table>
+<colgroup>
+<col width="19%" />
+<col width="19%" />
+<col width="17%" />
+<col width="44%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Example</th>
+<th align="left">Disease</th>
+<th align="left">Design</th>
+<th align="left">Key skill challenge</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">FLAME <span class="citation">(Wedzicha et al.
+2016)</span></td>
+<td align="left">COPD</td>
+<td align="left">Non-inferiority</td>
+<td align="left">Dropout interpretation (inflation vs exposure
+integral); inferring follow-up from “annual rate”</td>
+</tr>
+<tr class="even">
+<td align="left">IMPACT <span class="citation">(Lipson et al.
+2018)</span></td>
+<td align="left">COPD</td>
+<td align="left">3-arm superiority</td>
+<td align="left">Unequal allocation; deriving control rate from stated
+treatment rate + % reduction; 28-day event gap</td>
+</tr>
+<tr class="odd">
+<td align="left">OPERA I/II <span class="citation">(Hauser et al.
+2017)</span></td>
+<td align="left">MS</td>
+<td align="left">Superiority (paired studies)</td>
+<td align="left">Protocol sized by t-test, not NB; dispersion <span class="math inline">\(k\)</span> must be assumed</td>
+</tr>
+<tr class="even">
+<td align="left">Friede &amp; Schmidli <span class="citation">(Friede
+and Schmidli 2010)</span></td>
+<td align="left">COPD</td>
+<td align="left">Fixed superiority + NI</td>
+<td align="left">Pooled-rate parameterization (<span class="math inline">\(\lambda\)</span> overall, not per-arm); <span class="math inline">\(\phi = k\)</span> notation</td>
+</tr>
+<tr class="odd">
+<td align="left">Mutze et al. <span class="citation">(Mütze et al.
+2019)</span></td>
+<td align="left">HF + MS</td>
+<td align="left">Group sequential</td>
+<td align="left">Inverse dispersion (<span class="math inline">\(\kappa
+= 1/k\)</span>); variable follow-up from staggered entry; monthly vs
+annual units</td>
+</tr>
+<tr class="even">
+<td align="left">PARADIGM-HF <span class="citation">(McMurray et al.
+2014)</span></td>
+<td align="left">HF</td>
+<td align="left">Event-driven GS</td>
+<td align="left">Primary endpoint is not NB; recurrent-event parameters
+must be sourced externally</td>
+</tr>
+</tbody>
+</table>
+<p>The first example (FLAME) walks through the full skill workflow in
+detail. Subsequent examples focus on the extraction and computation
+steps, highlighting where each trial poses a new challenge.</p>
+</div>
+<div id="flame-trial" class="section level2">
+<h2>FLAME trial</h2>
+<p>We replicate the sample size from the FLAME COPD exacerbation
+protocol <span class="citation">(Wedzicha et al. 2016)</span>.</p>
+<div id="the-users-input" class="section level3">
+<h3>The user’s input</h3>
+<p>In a real session, the user might paste a protocol paragraph or
+summarize the design as follows:</p>
+<blockquote>
+<p>Size a non-inferiority COPD exacerbation trial with equal annual
+rates of 3.0, non-inferiority margin 1.15, one-sided alpha 0.025,
+greater than 95% power, dispersion k = 0.625, and 30% dropout or major
+protocol violations. The published target was 3332 randomized
+patients.</p>
+</blockquote>
+<p>The rest of this vignette walks through what the skill instructs the
+AI to do with this input.</p>
+</div>
+<div id="skill-step-1-extract-what-is-stated" class="section level3">
+<h3>Skill Step 1: Extract what is stated</h3>
+<p>Following the skill’s extraction table, the AI parses the text and
+classifies each parameter:</p>
+<table>
+<colgroup>
+<col width="25%" />
+<col width="18%" />
+<col width="39%" />
+<col width="16%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="center">Found?</th>
+<th align="left">Extracted value</th>
+<th align="left">Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Control event rate</td>
+<td align="center">Yes</td>
+<td align="left">3.0 events/year</td>
+<td align="left">“the underlying annual rate is 3.0”</td>
+</tr>
+<tr class="even">
+<td align="left">Treatment effect</td>
+<td align="center">Yes</td>
+<td align="left">RR = 1.0</td>
+<td align="left">“no difference between treatment groups”</td>
+</tr>
+<tr class="odd">
+<td align="left">Dispersion</td>
+<td align="center">Yes</td>
+<td align="left"><span class="math inline">\(k = 0.625\)</span></td>
+<td align="left">“index parameter k = 0.625”</td>
+</tr>
+<tr class="even">
+<td align="left">Power</td>
+<td align="center">Yes</td>
+<td align="left">&gt; 95%</td>
+<td align="left">“greater than 95% power”</td>
+</tr>
+<tr class="odd">
+<td align="left">Alpha</td>
+<td align="center">Yes</td>
+<td align="left">0.025, one-sided</td>
+<td align="left">“at the level of 0.025 (one-sided)”</td>
+</tr>
+<tr class="even">
+<td align="left">Null hypothesis</td>
+<td align="center">Yes</td>
+<td align="left">Non-inferiority, <span class="math inline">\(\text{rr}_0 = 1.15\)</span></td>
+<td align="left">“rule out a 1.15-fold increase”</td>
+</tr>
+<tr class="odd">
+<td align="left">Follow-up</td>
+<td align="center"><strong>Inferred</strong></td>
+<td align="left">1 year</td>
+<td align="left">Implied by “annual rate” but not explicitly stated</td>
+</tr>
+<tr class="even">
+<td align="left">Dropout</td>
+<td align="center">Yes</td>
+<td align="left">30%</td>
+<td align="left">“30% dropped out or major protocol violators”</td>
+</tr>
+<tr class="odd">
+<td align="left">Event gap</td>
+<td align="center"><strong>Not stated</strong></td>
+<td align="left">—</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">Enrollment</td>
+<td align="center"><strong>Not stated</strong></td>
+<td align="left">—</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">Trial duration</td>
+<td align="center"><strong>Not stated</strong></td>
+<td align="left">—</td>
+<td align="left"></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="skill-step-2-prompt-for-essentials" class="section level3">
+<h3>Skill Step 2: Prompt for essentials</h3>
+<p>Everything essential is present or inferable. In a real session, the
+AI would confirm the follow-up duration:</p>
+<blockquote>
+<p><em>“The protocol states an annual rate but does not explicitly give
+the follow-up duration. I’ll assume 1 year of maximum follow-up. Is that
+correct?”</em></p>
+</blockquote>
+<p>If the dispersion value seemed unusual for the disease area, the
+skill would also prompt: <em>“Is k = 0.625 the overdispersion parameter
+(<span class="math inline">\(\text{Var} = \mu + k\mu^2\)</span>) or the
+Gamma shape parameter (<span class="math inline">\(1/k\)</span>)?”</em>
+Here 0.625 is consistent with published COPD dispersion values, so no
+flag is raised.</p>
+</div>
+<div id="skill-step-3-apply-defaults-for-non-essentials" class="section level3">
+<h3>Skill Step 3: Apply defaults for non-essentials</h3>
+<p>The skill instructs the AI to default these with a note:</p>
+<ul>
+<li><strong>Event gap:</strong> “No event gap specified; assuming
+<code>event_gap = 0</code>.”</li>
+<li><strong>Accrual rate and trial duration:</strong> “Accrual pattern
+does not affect the fixed-design N when all patients have the same max
+follow-up. Placeholder values used.”</li>
+</ul>
+</div>
+<div id="skill-step-4-handle-dropout-correctly" class="section level3">
+<h3>Skill Step 4: Handle dropout correctly</h3>
+<p>The protocol says “30% dropped out or major protocol violators.” The
+skill recognises this as a combined dropout-plus-violator figure that
+reduces the evaluable sample. Following the skill’s guidance, the AI
+uses the inflation-factor approach: compute N assuming full follow-up,
+then divide by 0.70.</p>
+</div>
+<div id="skill-step-5-confirm-time-units" class="section level3">
+<h3>Skill Step 5: Confirm time units</h3>
+<p>All inputs are in <strong>years</strong>, matching the protocol’s
+“annual rate.”</p>
+</div>
+<div id="skill-step-6-compute-the-sample-size" class="section level3">
+<h3>Skill Step 6: Compute the sample size</h3>
+<p>With all parameters extracted and defaults applied, the AI translates
+directly to R code:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># All rates and durations in years</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>lambda1         <span class="ot">&lt;-</span> <span class="fl">3.0</span>                  <span class="co"># control exacerbation rate (events/year)</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>lambda2         <span class="ot">&lt;-</span> <span class="fl">3.0</span>                  <span class="co"># experimental rate (no difference under H1)</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>dispersion      <span class="ot">&lt;-</span> <span class="fl">0.625</span>                <span class="co"># NB dispersion k</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>rr0             <span class="ot">&lt;-</span> <span class="fl">1.15</span>                 <span class="co"># non-inferiority margin</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>event_gap       <span class="ot">&lt;-</span> <span class="dv">0</span>                    <span class="co"># no gap specified in protocol</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>max_followup    <span class="ot">&lt;-</span> <span class="dv">1</span>                    <span class="co"># 1-year follow-up</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>dropout_retained <span class="ot">&lt;-</span> <span class="fl">0.70</span>                <span class="co"># 30% dropout/violator -&gt; inflate by 1/0.70</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>alpha           <span class="ot">&lt;-</span> <span class="fl">0.025</span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>power           <span class="ot">&lt;-</span> <span class="fl">0.95</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="co"># Arbitrary accrual (does not affect N when all patients get the same max FU)</span></span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>accrual_rate    <span class="ot">&lt;-</span> <span class="dv">100</span>                  <span class="co"># subjects/year (placeholder)</span></span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a>accrual_dur     <span class="ot">&lt;-</span> <span class="dv">1</span>                    <span class="co"># 1-year enrollment (placeholder)</span></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>trial_duration  <span class="ot">&lt;-</span> <span class="dv">2</span>                    <span class="co"># years</span></span></code></pre></div>
+<div id="skill-compatible-replication" class="section level4">
+<h4>Skill-compatible replication</h4>
+<p>Because the FLAME wording combines dropout and major protocol
+violations, the skill treats the 30% as an inflation factor rather than
+as pure time-to-dropout. First compute the evaluable sample size under
+full follow-up, then divide by 0.70.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>wald_evaluable <span class="ot">&lt;-</span> <span class="fu">sample_size_nbinom</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="at">lambda1          =</span> lambda1,</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="at">lambda2          =</span> lambda2,</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  <span class="at">dispersion       =</span> dispersion,</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>  <span class="at">power            =</span> power,</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>  <span class="at">alpha            =</span> alpha,</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  <span class="at">rr0              =</span> rr0,</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  <span class="at">accrual_rate     =</span> accrual_rate,</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>  <span class="at">accrual_duration =</span> accrual_dur,</span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>  <span class="at">trial_duration   =</span> trial_duration,</span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>  <span class="at">dropout_rate     =</span> <span class="dv">0</span>,</span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>  <span class="at">max_followup     =</span> max_followup,</span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>  <span class="at">event_gap        =</span> event_gap,</span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>  <span class="at">test_type        =</span> <span class="st">&quot;wald&quot;</span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a>)</span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a>n_inflated <span class="ot">&lt;-</span> <span class="fu">ceiling</span>(<span class="fu">ceiling</span>(wald_evaluable<span class="sc">$</span>n_total) <span class="sc">/</span> dropout_retained)</span></code></pre></div>
+<p>If the 30% represented true dropout only, an alternative is to model
+it through the exposure integral by converting cumulative dropout to an
+exponential hazard. That gives partial credit for follow-up before
+dropout, so it is smaller than a sample-size inflation.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>wald_exposure <span class="ot">&lt;-</span> <span class="fu">sample_size_nbinom</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>  <span class="at">lambda1          =</span> lambda1,</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  <span class="at">lambda2          =</span> lambda2,</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>  <span class="at">dispersion       =</span> dispersion,</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>  <span class="at">power            =</span> power,</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>  <span class="at">alpha            =</span> alpha,</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>  <span class="at">rr0              =</span> rr0,</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>  <span class="at">accrual_rate     =</span> accrual_rate,</span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>  <span class="at">accrual_duration =</span> accrual_dur,</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>  <span class="at">trial_duration   =</span> trial_duration,</span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>  <span class="at">dropout_rate     =</span> <span class="sc">-</span><span class="fu">log</span>(dropout_retained) <span class="sc">/</span> max_followup,</span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>  <span class="at">max_followup     =</span> max_followup,</span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a>  <span class="at">event_gap        =</span> event_gap,</span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a>  <span class="at">test_type        =</span> <span class="st">&quot;wald&quot;</span></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a>)</span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a></span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a>  <span class="at">Method           =</span> <span class="fu">c</span>(<span class="st">&quot;Full follow-up + inflate / 0.70&quot;</span>,</span>
+<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a>                        <span class="st">&quot;Dropout via exposure integral&quot;</span>,</span>
+<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a>                        <span class="st">&quot;Protocol target&quot;</span>),</span>
+<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a>  <span class="at">N                =</span> <span class="fu">c</span>(n_inflated, <span class="fu">ceiling</span>(wald_exposure<span class="sc">$</span>n_total), <span class="dv">3332</span>)</span>
+<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a>) <span class="sc">|&gt;</span> knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">caption =</span> <span class="st">&quot;Sample size comparison: two dropout approaches vs protocol.&quot;</span>)</span></code></pre></div>
+<table>
+<caption>Sample size comparison: two dropout approaches vs
+protocol.</caption>
+<thead>
+<tr class="header">
+<th align="left">Method</th>
+<th align="right">N</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Full follow-up + inflate / 0.70</td>
+<td align="right">3646</td>
+</tr>
+<tr class="even">
+<td align="left">Dropout via exposure integral</td>
+<td align="right">2916</td>
+</tr>
+<tr class="odd">
+<td align="left">Protocol target</td>
+<td align="right">3332</td>
+</tr>
+</tbody>
+</table>
+<p>The protocol’s 3332 falls between the two approaches and is closer to
+the inflation-factor calculation. That is expected because the protocol
+quantity combines true dropout with major protocol violations. For a
+design where dropout is purely loss of follow-up, modeling dropout
+through the exposure integral is usually more informative; for a
+replication of this protocol statement, the inflation calculation is the
+cleaner match.</p>
+<p>The object summary below is the evaluable Wald calculation before the
+30% randomized-sample inflation is applied.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">summary</span>(wald_evaluable)</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="co">#&gt; Fixed sample size design for negative binomial outcome, total sample size 2552</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt; (n1=1276, n2=1276), 95 percent power, 2.5 percent (1-sided) Type I error.</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt; Control rate 3.0000, treatment rate 3.0000, risk ratio 1.0000, null hypothesis</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co">#&gt; RR 1.1500, dispersion 0.6250. Accrual duration 1.0, trial duration 2.0, average</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt; exposure 1.00. Expected events 7656.0. Randomization ratio 1:1.</span></span></code></pre></div>
+</div>
+</div>
+<div id="extensions-beyond-the-core-skill" class="section level3">
+<h3>Extensions beyond the core skill</h3>
+<p>The skill’s extraction workflow ends with the computed sample size
+above. The remaining sections show optional extensions that a user or AI
+might explore in a follow-up conversation.</p>
+<div id="score-sizing-comparison" class="section level4">
+<h4>Score sizing (comparison)</h4>
+<p>The skill recommends comparing Wald and score sizing. For
+non-inferiority where the null and alternative rates differ, the score
+formula’s null-variance calibration can produce a meaningfully different
+sample size.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>score_evaluable <span class="ot">&lt;-</span> <span class="fu">sample_size_nbinom</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  <span class="at">lambda1          =</span> lambda1,</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="at">lambda2          =</span> lambda2,</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  <span class="at">dispersion       =</span> dispersion,</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>  <span class="at">power            =</span> power,</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  <span class="at">alpha            =</span> alpha,</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>  <span class="at">rr0              =</span> rr0,</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>  <span class="at">accrual_rate     =</span> accrual_rate,</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>  <span class="at">accrual_duration =</span> accrual_dur,</span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>  <span class="at">trial_duration   =</span> trial_duration,</span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>  <span class="at">dropout_rate     =</span> <span class="dv">0</span>,</span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a>  <span class="at">max_followup     =</span> max_followup,</span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a>  <span class="at">event_gap        =</span> event_gap,</span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a>  <span class="at">test_type        =</span> <span class="st">&quot;score&quot;</span></span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a>)</span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a></span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a>score_inflated <span class="ot">&lt;-</span> <span class="fu">ceiling</span>(<span class="fu">ceiling</span>(score_evaluable<span class="sc">$</span>n_total) <span class="sc">/</span> dropout_retained)</span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a></span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a><span class="fu">summary</span>(score_evaluable)</span>
+<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a><span class="co">#&gt; Fixed sample size design for negative binomial outcome, total sample size 2518</span></span>
+<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a><span class="co">#&gt; (n1=1259, n2=1259), 95 percent power, 2.5 percent (1-sided) Type I error.</span></span>
+<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a><span class="co">#&gt; Control rate 3.0000, treatment rate 3.0000, risk ratio 1.0000, null hypothesis</span></span>
+<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a><span class="co">#&gt; RR 1.1500, dispersion 0.6250. Accrual duration 1.0, trial duration 2.0, average</span></span>
+<span id="cb6-24"><a href="#cb6-24" tabindex="-1"></a><span class="co">#&gt; exposure 1.00. Expected events 7554.0. Randomization ratio 1:1.</span></span></code></pre></div>
+</div>
+<div id="compare-the-two-sizing-rules" class="section level4">
+<h4>Compare the two sizing rules</h4>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>comparison <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>  <span class="at">Sizing        =</span> <span class="fu">c</span>(<span class="st">&quot;Wald&quot;</span>, <span class="st">&quot;Score&quot;</span>, <span class="st">&quot;Protocol target&quot;</span>),</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="at">evaluable_N   =</span> <span class="fu">c</span>(<span class="fu">ceiling</span>(wald_evaluable<span class="sc">$</span>n_total), <span class="fu">ceiling</span>(score_evaluable<span class="sc">$</span>n_total), <span class="cn">NA</span>),</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="at">randomized_N  =</span> <span class="fu">c</span>(n_inflated, score_inflated, <span class="dv">3332</span>),</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>  <span class="at">events        =</span> <span class="fu">round</span>(<span class="fu">c</span>(wald_evaluable<span class="sc">$</span>total_events, score_evaluable<span class="sc">$</span>total_events, <span class="cn">NA</span>), <span class="dv">1</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>)</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(comparison,</span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">&quot;Wald vs score sizing with randomized-sample inflation.&quot;</span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>)</span></code></pre></div>
+<table>
+<caption>Wald vs score sizing with randomized-sample
+inflation.</caption>
+<thead>
+<tr class="header">
+<th align="left">Sizing</th>
+<th align="right">evaluable_N</th>
+<th align="right">randomized_N</th>
+<th align="right">events</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Wald</td>
+<td align="right">2552</td>
+<td align="right">3646</td>
+<td align="right">7656</td>
+</tr>
+<tr class="even">
+<td align="left">Score</td>
+<td align="right">2518</td>
+<td align="right">3598</td>
+<td align="right">7554</td>
+</tr>
+<tr class="odd">
+<td align="left">Protocol target</td>
+<td align="right">NA</td>
+<td align="right">3332</td>
+<td align="right">NA</td>
+</tr>
+</tbody>
+</table>
+<p>For this non-inferiority design with equal planned rates (<span class="math inline">\(\lambda_1 =
+\lambda_2 = 3.0\)</span>), score sizing is slightly smaller than Wald
+sizing. That is not a general rule; it depends on the null margin,
+rates, dispersion, and the variance reference used by the formula. The
+skill asks the analyst to compare both rules rather than assume one is
+always more conservative.</p>
+</div>
+<div id="what-if-the-protocol-required-an-event-gap" class="section level4">
+<h4>What if the protocol required an event gap?</h4>
+<p>FLAME does not specify a minimum gap between exacerbations, but many
+COPD protocols require 28 symptom-free days to count a “new”
+exacerbation. Here we show how the Jensen correction would change the
+sample size if a 28-day gap were imposed. (Since rates are in years, we
+convert: 28/365.25 years.)</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>wald_gap_evaluable <span class="ot">&lt;-</span> <span class="fu">sample_size_nbinom</span>(</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>  <span class="at">lambda1          =</span> lambda1,</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>  <span class="at">lambda2          =</span> lambda2,</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>  <span class="at">dispersion       =</span> dispersion,</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>  <span class="at">power            =</span> power,</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>  <span class="at">alpha            =</span> alpha,</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>  <span class="at">rr0              =</span> rr0,</span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>  <span class="at">accrual_rate     =</span> accrual_rate,</span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>  <span class="at">accrual_duration =</span> accrual_dur,</span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>  <span class="at">trial_duration   =</span> trial_duration,</span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a>  <span class="at">dropout_rate     =</span> <span class="dv">0</span>,</span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a>  <span class="at">max_followup     =</span> max_followup,</span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a>  <span class="at">event_gap        =</span> <span class="dv">28</span> <span class="sc">/</span> <span class="fl">365.25</span>,       <span class="co"># 28 days in years</span></span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a>  <span class="at">test_type        =</span> <span class="st">&quot;wald&quot;</span></span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a>)</span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a></span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a>n_gap_inflated <span class="ot">&lt;-</span> <span class="fu">ceiling</span>(<span class="fu">ceiling</span>(wald_gap_evaluable<span class="sc">$</span>n_total) <span class="sc">/</span> dropout_retained)</span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a></span>
+<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a>  <span class="at">Formula   =</span> <span class="fu">c</span>(<span class="st">&quot;No gap (FLAME protocol)&quot;</span>, <span class="st">&quot;28-day gap (Jensen-corrected)&quot;</span>),</span>
+<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a>  <span class="at">N         =</span> <span class="fu">c</span>(n_inflated, n_gap_inflated),</span>
+<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a>  <span class="at">delta_n   =</span> <span class="fu">c</span>(<span class="dv">0</span>, n_gap_inflated <span class="sc">-</span> n_inflated)</span>
+<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a>) <span class="sc">|&gt;</span> knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">&quot;Impact of a hypothetical 28-day event gap on the FLAME sample size.&quot;</span></span>
+<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a>)</span></code></pre></div>
+<table>
+<caption>Impact of a hypothetical 28-day event gap on the FLAME sample
+size.</caption>
+<thead>
+<tr class="header">
+<th align="left">Formula</th>
+<th align="right">N</th>
+<th align="right">delta_n</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">No gap (FLAME protocol)</td>
+<td align="right">3646</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">28-day gap (Jensen-corrected)</td>
+<td align="right">4100</td>
+<td align="right">454</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="verify-by-simulation-fixed-design" class="section level4">
+<h4>Verify by simulation (fixed design)</h4>
+<p>A simulation can check whether the randomized sample size delivers
+the target power under the alternative (<span class="math inline">\(\lambda_1 = \lambda_2 = 3.0\)</span>, so <span class="math inline">\(\text{rr} = 1\)</span>) when the analysis tests
+non-inferiority against <span class="math inline">\(\text{rr}_0 =
+1.15\)</span>. The code below is intentionally not run during vignette
+building; use thousands of replicates for a real
+operating-characteristic check.</p>
+<p>Since <code>mutze_test()</code> tests <span class="math inline">\(H_0\!: \log(\text{rr}) = 0\)</span>, we shift the
+z-statistic to test the NI null:</p>
+<p><span class="math display">\[z_{\text{NI}} = \frac{\log(\text{rr}_0)
+- \hat{\beta}}{\widehat{\text{SE}}}\]</span></p>
+<p>and reject when <span class="math inline">\(z_{\text{NI}} \geq
+z_{1-\alpha}\)</span>.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>n_sims <span class="ot">&lt;-</span> <span class="dv">5000</span></span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>n_per_arm <span class="ot">&lt;-</span> <span class="fu">ceiling</span>(n_inflated <span class="sc">/</span> <span class="dv">2</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>enroll_rate <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">rate =</span> n_per_arm <span class="sc">*</span> <span class="dv">2</span>, <span class="at">duration =</span> accrual_dur)</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>fail_rate <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>  <span class="at">treatment  =</span> <span class="fu">c</span>(<span class="st">&quot;Control&quot;</span>, <span class="st">&quot;Experimental&quot;</span>),</span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>  <span class="at">rate       =</span> <span class="fu">c</span>(lambda1, lambda2),</span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>  <span class="at">dispersion =</span> <span class="fu">c</span>(dispersion, dispersion)</span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>)</span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a>dropout_df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a>  <span class="at">treatment =</span> <span class="fu">c</span>(<span class="st">&quot;Control&quot;</span>, <span class="st">&quot;Experimental&quot;</span>),</span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a>  <span class="at">rate      =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fu">log</span>(dropout_retained), <span class="sc">-</span><span class="fu">log</span>(dropout_retained)),</span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a>  <span class="at">duration  =</span> <span class="fu">c</span>(<span class="dv">100</span>, <span class="dv">100</span>)</span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a>)</span>
+<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a></span>
+<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">20260506</span>)</span>
+<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a>rejections <span class="ot">&lt;-</span> <span class="dv">0</span><span class="dt">L</span></span>
+<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_len</span>(n_sims)) {</span>
+<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a>  dat <span class="ot">&lt;-</span> <span class="fu">nb_sim</span>(</span>
+<span id="cb9-20"><a href="#cb9-20" tabindex="-1"></a>    <span class="at">enroll_rate  =</span> enroll_rate,</span>
+<span id="cb9-21"><a href="#cb9-21" tabindex="-1"></a>    <span class="at">fail_rate    =</span> fail_rate,</span>
+<span id="cb9-22"><a href="#cb9-22" tabindex="-1"></a>    <span class="at">dropout_rate =</span> dropout_df,</span>
+<span id="cb9-23"><a href="#cb9-23" tabindex="-1"></a>    <span class="at">max_followup =</span> max_followup</span>
+<span id="cb9-24"><a href="#cb9-24" tabindex="-1"></a>  )</span>
+<span id="cb9-25"><a href="#cb9-25" tabindex="-1"></a>  dat <span class="ot">&lt;-</span> <span class="fu">cut_data_by_date</span>(dat, trial_duration)</span>
+<span id="cb9-26"><a href="#cb9-26" tabindex="-1"></a>  tst <span class="ot">&lt;-</span> <span class="fu">mutze_test</span>(dat, <span class="at">test_type =</span> <span class="st">&quot;wald&quot;</span>)</span>
+<span id="cb9-27"><a href="#cb9-27" tabindex="-1"></a>  <span class="co"># NI z-statistic: shift from H0: beta=0 to H0: rr &gt;= rr0</span></span>
+<span id="cb9-28"><a href="#cb9-28" tabindex="-1"></a>  z_ni <span class="ot">&lt;-</span> (<span class="fu">log</span>(rr0) <span class="sc">-</span> tst<span class="sc">$</span>estimate) <span class="sc">/</span> tst<span class="sc">$</span>se</span>
+<span id="cb9-29"><a href="#cb9-29" tabindex="-1"></a>  <span class="cf">if</span> (z_ni <span class="sc">&gt;=</span> <span class="fu">qnorm</span>(<span class="dv">1</span> <span class="sc">-</span> alpha)) rejections <span class="ot">&lt;-</span> rejections <span class="sc">+</span> <span class="dv">1</span><span class="dt">L</span></span>
+<span id="cb9-30"><a href="#cb9-30" tabindex="-1"></a>}</span>
+<span id="cb9-31"><a href="#cb9-31" tabindex="-1"></a></span>
+<span id="cb9-32"><a href="#cb9-32" tabindex="-1"></a>empirical_power <span class="ot">&lt;-</span> rejections <span class="sc">/</span> n_sims</span>
+<span id="cb9-33"><a href="#cb9-33" tabindex="-1"></a></span>
+<span id="cb9-34"><a href="#cb9-34" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb9-35"><a href="#cb9-35" tabindex="-1"></a>  <span class="at">Metric =</span> <span class="fu">c</span>(<span class="st">&quot;Target power&quot;</span>, <span class="st">&quot;Empirical power&quot;</span>, <span class="st">&quot;Replicates&quot;</span>),</span>
+<span id="cb9-36"><a href="#cb9-36" tabindex="-1"></a>  <span class="at">Value  =</span> <span class="fu">c</span>(<span class="fu">sprintf</span>(<span class="st">&quot;%.1f%%&quot;</span>, power <span class="sc">*</span> <span class="dv">100</span>),</span>
+<span id="cb9-37"><a href="#cb9-37" tabindex="-1"></a>             <span class="fu">sprintf</span>(<span class="st">&quot;%.1f%%&quot;</span>, empirical_power <span class="sc">*</span> <span class="dv">100</span>),</span>
+<span id="cb9-38"><a href="#cb9-38" tabindex="-1"></a>             n_sims)</span>
+<span id="cb9-39"><a href="#cb9-39" tabindex="-1"></a>) <span class="sc">|&gt;</span> knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">caption =</span> <span class="st">&quot;Fixed-design simulation verification.&quot;</span>)</span></code></pre></div>
+<p>At 5,000 replicates, the Monte Carlo standard error near 95% power is
+about 0.3 percentage points.</p>
+</div>
+</div>
+</div>
+<div id="impact-trial" class="section level2">
+<h2>IMPACT trial</h2>
+<p>The IMPACT trial <span class="citation">(Lipson et al. 2018)</span>
+compared triple therapy (fluticasone furoate/umeclidinium/vilanterol,
+FF/UMEC/VI) to two dual therapies (FF/VI and UMEC/VI) in COPD patients
+with a history of exacerbations. The protocol (Section 8.2.1) gives
+exact sample size assumptions.</p>
+<div id="the-users-input-1" class="section level3">
+<h3>The user’s input</h3>
+<p>The user might summarize the protocol assumptions this way:</p>
+<blockquote>
+<p>Size the two pairwise IMPACT contrasts from a 2:2:1 trial: 4000 on
+triple therapy, 4000 on FF/VI, and 2000 on UMEC/VI. Use 90% power,
+two-sided 1% alpha, a 0.80/year triple-therapy event rate, 15% reduction
+versus UMEC/VI, 12% reduction versus FF/VI, dispersion k = 0.75, 52
+weeks of follow-up, and a 28-day event gap.</p>
+</blockquote>
+</div>
+<div id="extraction-and-computation" class="section level3">
+<h3>Extraction and computation</h3>
+<p>The skill extracts the FF/UMEC/VI vs UMEC/VI comparison:</p>
+<ul>
+<li>Control rate (UMEC/VI): <span class="math inline">\(0.80 / (1 -
+0.15) \approx 0.941\)</span>/year</li>
+<li>Treatment rate (FF/UMEC/VI): 0.80/year → RR = 0.85</li>
+<li>Dispersion: <span class="math inline">\(k = 0.75\)</span></li>
+<li>Power: 90%, Alpha: 0.01 two-sided (→ 0.005 one-sided)</li>
+<li>Allocation: 2:1 (FF/UMEC/VI : UMEC/VI)</li>
+<li>Follow-up: 52 weeks ≈ 1 year</li>
+<li>Event gap: 28 days = 28/365.25 years</li>
+</ul>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="co"># IMPACT: FF/UMEC/VI vs UMEC/VI</span></span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>lambda_triple <span class="ot">&lt;-</span> <span class="fl">0.80</span>                     <span class="co"># FF/UMEC/VI rate (events/year)</span></span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>lambda_umec   <span class="ot">&lt;-</span> lambda_triple <span class="sc">/</span> (<span class="dv">1</span> <span class="sc">-</span> <span class="fl">0.15</span>)  <span class="co"># UMEC/VI rate (~0.941)</span></span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>impact_wald <span class="ot">&lt;-</span> <span class="fu">sample_size_nbinom</span>(</span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>  <span class="at">lambda1          =</span> lambda_umec,           <span class="co"># control = UMEC/VI</span></span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a>  <span class="at">lambda2          =</span> lambda_triple,         <span class="co"># experimental = FF/UMEC/VI</span></span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a>  <span class="at">dispersion       =</span> <span class="fl">0.75</span>,</span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a>  <span class="at">power            =</span> <span class="fl">0.90</span>,</span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a>  <span class="at">alpha            =</span> <span class="fl">0.005</span>,                 <span class="co"># two-sided 1% → one-sided 0.5%</span></span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a>  <span class="at">sided            =</span> <span class="dv">1</span>,</span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a>  <span class="at">ratio            =</span> <span class="dv">2</span>,                     <span class="co"># 2:1 (experimental:control)</span></span>
+<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a>  <span class="at">accrual_rate     =</span> <span class="dv">100</span>,</span>
+<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a>  <span class="at">accrual_duration =</span> <span class="dv">1</span>,</span>
+<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a>  <span class="at">trial_duration   =</span> <span class="dv">2</span>,</span>
+<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a>  <span class="at">max_followup     =</span> <span class="dv">1</span>,                     <span class="co"># 52-week follow-up</span></span>
+<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a>  <span class="at">event_gap        =</span> <span class="dv">28</span> <span class="sc">/</span> <span class="fl">365.25</span>,           <span class="co"># 28-day gap</span></span>
+<span id="cb10-18"><a href="#cb10-18" tabindex="-1"></a>  <span class="at">test_type        =</span> <span class="st">&quot;wald&quot;</span></span>
+<span id="cb10-19"><a href="#cb10-19" tabindex="-1"></a>)</span>
+<span id="cb10-20"><a href="#cb10-20" tabindex="-1"></a></span>
+<span id="cb10-21"><a href="#cb10-21" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb10-22"><a href="#cb10-22" tabindex="-1"></a>  <span class="at">Metric =</span> <span class="fu">c</span>(<span class="st">&quot;N control (UMEC/VI)&quot;</span>, <span class="st">&quot;N experimental (FF/UMEC/VI)&quot;</span>,</span>
+<span id="cb10-23"><a href="#cb10-23" tabindex="-1"></a>             <span class="st">&quot;N total (this comparison)&quot;</span>, <span class="st">&quot;Protocol target (comparison)&quot;</span>),</span>
+<span id="cb10-24"><a href="#cb10-24" tabindex="-1"></a>  <span class="at">Value  =</span> <span class="fu">c</span>(<span class="fu">ceiling</span>(impact_wald<span class="sc">$</span>n1), <span class="fu">ceiling</span>(impact_wald<span class="sc">$</span>n2),</span>
+<span id="cb10-25"><a href="#cb10-25" tabindex="-1"></a>             <span class="fu">ceiling</span>(impact_wald<span class="sc">$</span>n_total), <span class="st">&quot;2,000 + 4,000 = 6,000&quot;</span>)</span>
+<span id="cb10-26"><a href="#cb10-26" tabindex="-1"></a>) <span class="sc">|&gt;</span> knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">caption =</span> <span class="st">&quot;IMPACT: FF/UMEC/VI vs UMEC/VI.&quot;</span>)</span></code></pre></div>
+<table>
+<caption>IMPACT: FF/UMEC/VI vs UMEC/VI.</caption>
+<thead>
+<tr class="header">
+<th align="left">Metric</th>
+<th align="left">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">N control (UMEC/VI)</td>
+<td align="left">1697</td>
+</tr>
+<tr class="even">
+<td align="left">N experimental (FF/UMEC/VI)</td>
+<td align="left">3394</td>
+</tr>
+<tr class="odd">
+<td align="left">N total (this comparison)</td>
+<td align="left">5091</td>
+</tr>
+<tr class="even">
+<td align="left">Protocol target (comparison)</td>
+<td align="left">2,000 + 4,000 = 6,000</td>
+</tr>
+</tbody>
+</table>
+<p>The protocol’s 10,000-patient total also powers the FF/UMEC/VI vs
+FF/VI comparison with a smaller 12% effect:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="co"># IMPACT: FF/UMEC/VI vs FF/VI</span></span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>lambda_ffvi <span class="ot">&lt;-</span> lambda_triple <span class="sc">/</span> (<span class="dv">1</span> <span class="sc">-</span> <span class="fl">0.12</span>)  <span class="co"># FF/VI rate (~0.909)</span></span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>impact_ffvi <span class="ot">&lt;-</span> <span class="fu">sample_size_nbinom</span>(</span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>  <span class="at">lambda1          =</span> lambda_ffvi,</span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>  <span class="at">lambda2          =</span> lambda_triple,</span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>  <span class="at">dispersion       =</span> <span class="fl">0.75</span>,</span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a>  <span class="at">power            =</span> <span class="fl">0.90</span>,</span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a>  <span class="at">alpha            =</span> <span class="fl">0.005</span>,</span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a>  <span class="at">sided            =</span> <span class="dv">1</span>,</span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a>  <span class="at">ratio            =</span> <span class="dv">1</span>,                     <span class="co"># 1:1 (4,000 : 4,000)</span></span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a>  <span class="at">accrual_rate     =</span> <span class="dv">100</span>,</span>
+<span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a>  <span class="at">accrual_duration =</span> <span class="dv">1</span>,</span>
+<span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a>  <span class="at">trial_duration   =</span> <span class="dv">2</span>,</span>
+<span id="cb11-15"><a href="#cb11-15" tabindex="-1"></a>  <span class="at">max_followup     =</span> <span class="dv">1</span>,</span>
+<span id="cb11-16"><a href="#cb11-16" tabindex="-1"></a>  <span class="at">event_gap        =</span> <span class="dv">28</span> <span class="sc">/</span> <span class="fl">365.25</span>,</span>
+<span id="cb11-17"><a href="#cb11-17" tabindex="-1"></a>  <span class="at">test_type        =</span> <span class="st">&quot;wald&quot;</span></span>
+<span id="cb11-18"><a href="#cb11-18" tabindex="-1"></a>)</span>
+<span id="cb11-19"><a href="#cb11-19" tabindex="-1"></a></span>
+<span id="cb11-20"><a href="#cb11-20" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb11-21"><a href="#cb11-21" tabindex="-1"></a>  <span class="at">Metric =</span> <span class="fu">c</span>(<span class="st">&quot;N per arm (FF/UMEC/VI vs FF/VI)&quot;</span>, <span class="st">&quot;N total&quot;</span>, <span class="st">&quot;Protocol target&quot;</span>),</span>
+<span id="cb11-22"><a href="#cb11-22" tabindex="-1"></a>  <span class="at">Value  =</span> <span class="fu">c</span>(<span class="fu">ceiling</span>(impact_ffvi<span class="sc">$</span>n1), <span class="fu">ceiling</span>(impact_ffvi<span class="sc">$</span>n_total), <span class="st">&quot;4,000 + 4,000 = 8,000&quot;</span>)</span>
+<span id="cb11-23"><a href="#cb11-23" tabindex="-1"></a>) <span class="sc">|&gt;</span> knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">caption =</span> <span class="st">&quot;IMPACT: FF/UMEC/VI vs FF/VI (12% reduction).&quot;</span>)</span></code></pre></div>
+<table>
+<caption>IMPACT: FF/UMEC/VI vs FF/VI (12% reduction).</caption>
+<thead>
+<tr class="header">
+<th align="left">Metric</th>
+<th align="left">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">N per arm (FF/UMEC/VI vs FF/VI)</td>
+<td align="left">3748</td>
+</tr>
+<tr class="even">
+<td align="left">N total</td>
+<td align="left">7496</td>
+</tr>
+<tr class="odd">
+<td align="left">Protocol target</td>
+<td align="left">4,000 + 4,000 = 8,000</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="sensitivity-to-dispersion" class="section level3">
+<h3>Sensitivity to dispersion</h3>
+<p>The protocol states <span class="math inline">\(k = 0.75\)</span> but
+acknowledges uncertainty. How does sample size vary with <span class="math inline">\(k\)</span>?</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>k_vals <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="fl">0.3</span>, <span class="fl">1.5</span>, <span class="at">by =</span> <span class="fl">0.05</span>)</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>n_by_k <span class="ot">&lt;-</span> <span class="fu">vapply</span>(k_vals, <span class="cf">function</span>(k) {</span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>  res <span class="ot">&lt;-</span> <span class="fu">sample_size_nbinom</span>(</span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>    <span class="at">lambda1 =</span> lambda_umec, <span class="at">lambda2 =</span> lambda_triple, <span class="at">dispersion =</span> k,</span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>    <span class="at">power =</span> <span class="fl">0.90</span>, <span class="at">alpha =</span> <span class="fl">0.005</span>, <span class="at">sided =</span> <span class="dv">1</span>, <span class="at">ratio =</span> <span class="dv">2</span>,</span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a>    <span class="at">accrual_rate =</span> <span class="dv">100</span>, <span class="at">accrual_duration =</span> <span class="dv">1</span>, <span class="at">trial_duration =</span> <span class="dv">2</span>,</span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a>    <span class="at">max_followup =</span> <span class="dv">1</span>, <span class="at">event_gap =</span> <span class="dv">28</span> <span class="sc">/</span> <span class="fl">365.25</span>, <span class="at">test_type =</span> <span class="st">&quot;wald&quot;</span></span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a>  )</span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a>  <span class="fu">ceiling</span>(res<span class="sc">$</span>n_total)</span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a>}, <span class="fu">numeric</span>(<span class="dv">1</span>))</span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a></span>
+<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a>sens_df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">k =</span> k_vals, <span class="at">N =</span> n_by_k)</span>
+<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a></span>
+<span id="cb12-16"><a href="#cb12-16" tabindex="-1"></a>p <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(sens_df, <span class="fu">aes</span>(<span class="at">x =</span> k, <span class="at">y =</span> N)) <span class="sc">+</span></span>
+<span id="cb12-17"><a href="#cb12-17" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">0.8</span>, <span class="at">colour =</span> <span class="st">&quot;#2166AC&quot;</span>) <span class="sc">+</span></span>
+<span id="cb12-18"><a href="#cb12-18" tabindex="-1"></a>  <span class="fu">geom_point</span>(</span>
+<span id="cb12-19"><a href="#cb12-19" tabindex="-1"></a>    <span class="at">data =</span> sens_df[sens_df<span class="sc">$</span>k <span class="sc">==</span> <span class="fl">0.75</span>, ],</span>
+<span id="cb12-20"><a href="#cb12-20" tabindex="-1"></a>    <span class="at">colour =</span> <span class="st">&quot;#B2182B&quot;</span>, <span class="at">size =</span> <span class="dv">3</span></span>
+<span id="cb12-21"><a href="#cb12-21" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb12-22"><a href="#cb12-22" tabindex="-1"></a>  <span class="fu">annotate</span>(<span class="st">&quot;text&quot;</span>, <span class="at">x =</span> <span class="fl">0.75</span>, <span class="at">y =</span> sens_df<span class="sc">$</span>N[sens_df<span class="sc">$</span>k <span class="sc">==</span> <span class="fl">0.75</span>],</span>
+<span id="cb12-23"><a href="#cb12-23" tabindex="-1"></a>           <span class="at">label =</span> <span class="st">&quot;Protocol assumption&quot;</span>, <span class="at">vjust =</span> <span class="sc">-</span><span class="fl">1.2</span>,</span>
+<span id="cb12-24"><a href="#cb12-24" tabindex="-1"></a>           <span class="at">colour =</span> <span class="st">&quot;#B2182B&quot;</span>, <span class="at">size =</span> <span class="fl">3.5</span>) <span class="sc">+</span></span>
+<span id="cb12-25"><a href="#cb12-25" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span>comma) <span class="sc">+</span></span>
+<span id="cb12-26"><a href="#cb12-26" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb12-27"><a href="#cb12-27" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">&quot;Dispersion parameter k&quot;</span>,</span>
+<span id="cb12-28"><a href="#cb12-28" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">&quot;Total sample size N&quot;</span>,</span>
+<span id="cb12-29"><a href="#cb12-29" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">&quot;IMPACT: sample size sensitivity to dispersion&quot;</span></span>
+<span id="cb12-30"><a href="#cb12-30" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb12-31"><a href="#cb12-31" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">12</span>)</span>
+<span id="cb12-32"><a href="#cb12-32" tabindex="-1"></a></span>
+<span id="cb12-33"><a href="#cb12-33" tabindex="-1"></a>p</span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
+<p>The sample size increases substantially with <span class="math inline">\(k\)</span> — motivating blinded SSR (see the
+<code>ssr-example</code> vignette).</p>
+</div>
+<div id="impact-of-the-28-day-event-gap" class="section level3">
+<h3>Impact of the 28-day event gap</h3>
+<p>The Jensen correction reduces the effective rate (more events are
+“absorbed” by the gap), which inflates the sample size:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>impact_nogap <span class="ot">&lt;-</span> <span class="fu">sample_size_nbinom</span>(</span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>  <span class="at">lambda1 =</span> lambda_umec, <span class="at">lambda2 =</span> lambda_triple, <span class="at">dispersion =</span> <span class="fl">0.75</span>,</span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>  <span class="at">power =</span> <span class="fl">0.90</span>, <span class="at">alpha =</span> <span class="fl">0.005</span>, <span class="at">sided =</span> <span class="dv">1</span>, <span class="at">ratio =</span> <span class="dv">2</span>,</span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>  <span class="at">accrual_rate =</span> <span class="dv">100</span>, <span class="at">accrual_duration =</span> <span class="dv">1</span>, <span class="at">trial_duration =</span> <span class="dv">2</span>,</span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a>  <span class="at">max_followup =</span> <span class="dv">1</span>, <span class="at">event_gap =</span> <span class="dv">0</span>, <span class="at">test_type =</span> <span class="st">&quot;wald&quot;</span></span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a>)</span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a></span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a>  <span class="at">Design      =</span> <span class="fu">c</span>(<span class="st">&quot;No event gap&quot;</span>, <span class="st">&quot;28-day gap (Jensen-corrected)&quot;</span>),</span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a>  <span class="at">N           =</span> <span class="fu">c</span>(<span class="fu">ceiling</span>(impact_nogap<span class="sc">$</span>n_total), <span class="fu">ceiling</span>(impact_wald<span class="sc">$</span>n_total)),</span>
+<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a>  <span class="at">Delta       =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fu">ceiling</span>(impact_wald<span class="sc">$</span>n_total) <span class="sc">-</span> <span class="fu">ceiling</span>(impact_nogap<span class="sc">$</span>n_total))</span>
+<span id="cb13-12"><a href="#cb13-12" tabindex="-1"></a>) <span class="sc">|&gt;</span> knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">caption =</span> <span class="st">&quot;Impact of the 28-day event gap on IMPACT sample size.&quot;</span>)</span></code></pre></div>
+<table>
+<caption>Impact of the 28-day event gap on IMPACT sample size.</caption>
+<thead>
+<tr class="header">
+<th align="left">Design</th>
+<th align="right">N</th>
+<th align="right">Delta</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">No event gap</td>
+<td align="right">4754</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">28-day gap (Jensen-corrected)</td>
+<td align="right">5091</td>
+<td align="right">337</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="opera-iii-trials" class="section level2">
+<h2>OPERA I/II trials</h2>
+<p>The OPERA I and II trials <span class="citation">(Hauser et al.
+2017)</span> evaluated ocrelizumab vs interferon beta-1a (Rebif) in
+relapsing multiple sclerosis. The primary endpoint was the annualized
+relapse rate (ARR) at 96 weeks, analyzed with a negative binomial
+model.</p>
+<div id="the-users-input-2" class="section level3">
+<h3>The user’s input</h3>
+<p>The user might summarize the published design as:</p>
+<blockquote>
+<p>Each OPERA study randomized about 400 patients per arm. Use a Rebif
+ARR of 0.33/year, a 50% relative reduction for ocrelizumab, two-sided
+alpha 0.05, 84% power, 96 weeks of follow-up, and 20% dropout. The
+protocol does not give an NB dispersion value for sample-size
+replication.</p>
+</blockquote>
+</div>
+<div id="extraction-and-computation-1" class="section level3">
+<h3>Extraction and computation</h3>
+<p>The protocol used a t-test for sizing but the analysis used NB
+regression. We can check what <code>sample_size_nbinom()</code> gives
+with plausible dispersion values for MS relapses (<span class="math inline">\(k \in [0.5, 1.5]\)</span>):</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a><span class="co"># OPERA: ocrelizumab vs Rebif</span></span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a>opera_k_vals <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">0.75</span>, <span class="fl">1.0</span>, <span class="fl">1.5</span>)</span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a>opera_results <span class="ot">&lt;-</span> <span class="fu">lapply</span>(opera_k_vals, <span class="cf">function</span>(k) {</span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a>  res <span class="ot">&lt;-</span> <span class="fu">sample_size_nbinom</span>(</span>
+<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a>    <span class="at">lambda1          =</span> <span class="fl">0.33</span>,                 <span class="co"># Rebif ARR (events/year)</span></span>
+<span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a>    <span class="at">lambda2          =</span> <span class="fl">0.165</span>,                <span class="co"># ocrelizumab ARR</span></span>
+<span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a>    <span class="at">dispersion       =</span> k,</span>
+<span id="cb14-8"><a href="#cb14-8" tabindex="-1"></a>    <span class="at">power            =</span> <span class="fl">0.84</span>,</span>
+<span id="cb14-9"><a href="#cb14-9" tabindex="-1"></a>    <span class="at">alpha            =</span> <span class="fl">0.025</span>,                <span class="co"># two-sided 5% → one-sided 2.5%</span></span>
+<span id="cb14-10"><a href="#cb14-10" tabindex="-1"></a>    <span class="at">sided            =</span> <span class="dv">1</span>,</span>
+<span id="cb14-11"><a href="#cb14-11" tabindex="-1"></a>    <span class="at">ratio            =</span> <span class="dv">1</span>,</span>
+<span id="cb14-12"><a href="#cb14-12" tabindex="-1"></a>    <span class="at">accrual_rate     =</span> <span class="dv">100</span>,</span>
+<span id="cb14-13"><a href="#cb14-13" tabindex="-1"></a>    <span class="at">accrual_duration =</span> <span class="dv">1</span>,</span>
+<span id="cb14-14"><a href="#cb14-14" tabindex="-1"></a>    <span class="at">trial_duration   =</span> <span class="dv">3</span>,</span>
+<span id="cb14-15"><a href="#cb14-15" tabindex="-1"></a>    <span class="at">max_followup     =</span> <span class="dv">96</span> <span class="sc">/</span> <span class="dv">52</span>,              <span class="co"># 96 weeks ≈ 1.846 years</span></span>
+<span id="cb14-16"><a href="#cb14-16" tabindex="-1"></a>    <span class="at">dropout_rate     =</span> <span class="sc">-</span><span class="fu">log</span>(<span class="fl">0.80</span>) <span class="sc">/</span> (<span class="dv">96</span><span class="sc">/</span><span class="dv">52</span>), <span class="co"># 20% dropout over 96 weeks</span></span>
+<span id="cb14-17"><a href="#cb14-17" tabindex="-1"></a>    <span class="at">test_type        =</span> <span class="st">&quot;wald&quot;</span></span>
+<span id="cb14-18"><a href="#cb14-18" tabindex="-1"></a>  )</span>
+<span id="cb14-19"><a href="#cb14-19" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">k =</span> k, <span class="at">N_per_arm =</span> <span class="fu">ceiling</span>(res<span class="sc">$</span>n1), <span class="at">N_total =</span> <span class="fu">ceiling</span>(res<span class="sc">$</span>n_total))</span>
+<span id="cb14-20"><a href="#cb14-20" tabindex="-1"></a>})</span>
+<span id="cb14-21"><a href="#cb14-21" tabindex="-1"></a></span>
+<span id="cb14-22"><a href="#cb14-22" tabindex="-1"></a>opera_df <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, opera_results)</span>
+<span id="cb14-23"><a href="#cb14-23" tabindex="-1"></a>opera_df<span class="sc">$</span>Protocol <span class="ot">&lt;-</span> <span class="dv">400</span></span>
+<span id="cb14-24"><a href="#cb14-24" tabindex="-1"></a></span>
+<span id="cb14-25"><a href="#cb14-25" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(opera_df,</span>
+<span id="cb14-26"><a href="#cb14-26" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">&quot;OPERA sample size for varying dispersion k (84% power, RR = 0.50).&quot;</span></span>
+<span id="cb14-27"><a href="#cb14-27" tabindex="-1"></a>)</span></code></pre></div>
+<table>
+<caption>OPERA sample size for varying dispersion k (84% power, RR =
+0.50).</caption>
+<thead>
+<tr class="header">
+<th align="right">k</th>
+<th align="right">N_per_arm</th>
+<th align="right">N_total</th>
+<th align="right">Protocol</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.50</td>
+<td align="right">120</td>
+<td align="right">240</td>
+<td align="right">400</td>
+</tr>
+<tr class="even">
+<td align="right">0.75</td>
+<td align="right">130</td>
+<td align="right">260</td>
+<td align="right">400</td>
+</tr>
+<tr class="odd">
+<td align="right">1.00</td>
+<td align="right">139</td>
+<td align="right">278</td>
+<td align="right">400</td>
+</tr>
+<tr class="even">
+<td align="right">1.50</td>
+<td align="right">159</td>
+<td align="right">318</td>
+<td align="right">400</td>
+</tr>
+</tbody>
+</table>
+<p>With a 50% rate reduction, this NB calculation gives fewer than 400
+subjects per arm across the assumed dispersion range. That does not mean
+the protocol was over-sized: the published calculation used a different
+sizing model, and this NB replication requires an assumed <span class="math inline">\(k\)</span> that was not stated in the excerpt. The
+skill should therefore present this as a sensitivity analysis, not an
+exact replication.</p>
+</div>
+</div>
+<div id="friede-schmidli---formula-validation" class="section level2">
+<h2>Friede &amp; Schmidli - formula validation</h2>
+<p>Friede &amp; Schmidli <span class="citation">(2010)</span> provide
+sample sizes for balanced COPD superiority trials using the same Wald
+formula implemented in <code>sample_size_nbinom()</code>. Their Table 1
+gives fixed-design <span class="math inline">\(n_0\)</span> per group
+for specific combinations of rate ratio <span class="math inline">\(\theta\)</span>, overall event rate <span class="math inline">\(\lambda\)</span>, shape parameter <span class="math inline">\(\phi\)</span>, and target power.</p>
+<div id="published-n_0-values" class="section level3">
+<h3>Published <span class="math inline">\(n_0\)</span> values</h3>
+<p>For their base scenario (<span class="math inline">\(\lambda^* =
+1.5\)</span>/year, <span class="math inline">\(\phi^* = 0.5\)</span>,
+equal allocation, one-sided <span class="math inline">\(\alpha =
+0.025\)</span>, follow-up <span class="math inline">\(t_i = 1\)</span>
+year):</p>
+<table>
+<thead>
+<tr class="header">
+<th><span class="math inline">\(\theta\)</span></th>
+<th>Power</th>
+<th>Published <span class="math inline">\(n_0\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0.7</td>
+<td>80%</td>
+<td>147</td>
+</tr>
+<tr class="even">
+<td>0.7</td>
+<td>90%</td>
+<td>196</td>
+</tr>
+<tr class="odd">
+<td>0.8</td>
+<td>80%</td>
+<td>370</td>
+</tr>
+<tr class="even">
+<td>0.8</td>
+<td>90%</td>
+<td>496</td>
+</tr>
+</tbody>
+</table>
+<p>Note that <span class="math inline">\(\lambda\)</span> in Friede
+&amp; Schmidli is the overall (pooled) rate, <span class="math inline">\(\lambda = (\lambda_0 + \lambda_1) / 2\)</span>,
+and <span class="math inline">\(\phi\)</span> is our <span class="math inline">\(k\)</span> (dispersion such that <span class="math inline">\(\text{Var} = \mu + \phi\mu^2\)</span>). Given
+<span class="math inline">\(\lambda = 1.5\)</span> and <span class="math inline">\(\theta = \lambda_1/\lambda_0\)</span>:</p>
+<p><span class="math display">\[\lambda_0 = \frac{2\lambda}{1 + \theta},
+\quad \lambda_1 = \theta \cdot \lambda_0\]</span></p>
+</div>
+<div id="replication" class="section level3">
+<h3>Replication</h3>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a>friede_scenarios <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(</span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>  <span class="at">theta =</span> <span class="fu">c</span>(<span class="fl">0.7</span>, <span class="fl">0.8</span>),</span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a>  <span class="at">power =</span> <span class="fu">c</span>(<span class="fl">0.80</span>, <span class="fl">0.90</span>)</span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a>)</span>
+<span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a>lambda_overall <span class="ot">&lt;-</span> <span class="fl">1.5</span></span>
+<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a>phi <span class="ot">&lt;-</span> <span class="fl">0.5</span></span>
+<span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a></span>
+<span id="cb15-8"><a href="#cb15-8" tabindex="-1"></a>friede_results <span class="ot">&lt;-</span> <span class="fu">mapply</span>(<span class="cf">function</span>(theta, pwr) {</span>
+<span id="cb15-9"><a href="#cb15-9" tabindex="-1"></a>  lam0 <span class="ot">&lt;-</span> <span class="dv">2</span> <span class="sc">*</span> lambda_overall <span class="sc">/</span> (<span class="dv">1</span> <span class="sc">+</span> theta)</span>
+<span id="cb15-10"><a href="#cb15-10" tabindex="-1"></a>  lam1 <span class="ot">&lt;-</span> theta <span class="sc">*</span> lam0</span>
+<span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a>  res <span class="ot">&lt;-</span> <span class="fu">sample_size_nbinom</span>(</span>
+<span id="cb15-12"><a href="#cb15-12" tabindex="-1"></a>    <span class="at">lambda1          =</span> lam0,</span>
+<span id="cb15-13"><a href="#cb15-13" tabindex="-1"></a>    <span class="at">lambda2          =</span> lam1,</span>
+<span id="cb15-14"><a href="#cb15-14" tabindex="-1"></a>    <span class="at">dispersion       =</span> phi,</span>
+<span id="cb15-15"><a href="#cb15-15" tabindex="-1"></a>    <span class="at">power            =</span> pwr,</span>
+<span id="cb15-16"><a href="#cb15-16" tabindex="-1"></a>    <span class="at">alpha            =</span> <span class="fl">0.025</span>,</span>
+<span id="cb15-17"><a href="#cb15-17" tabindex="-1"></a>    <span class="at">sided            =</span> <span class="dv">1</span>,</span>
+<span id="cb15-18"><a href="#cb15-18" tabindex="-1"></a>    <span class="at">ratio            =</span> <span class="dv">1</span>,</span>
+<span id="cb15-19"><a href="#cb15-19" tabindex="-1"></a>    <span class="at">accrual_rate     =</span> <span class="dv">100</span>,</span>
+<span id="cb15-20"><a href="#cb15-20" tabindex="-1"></a>    <span class="at">accrual_duration =</span> <span class="dv">1</span>,</span>
+<span id="cb15-21"><a href="#cb15-21" tabindex="-1"></a>    <span class="at">trial_duration   =</span> <span class="dv">2</span>,</span>
+<span id="cb15-22"><a href="#cb15-22" tabindex="-1"></a>    <span class="at">max_followup     =</span> <span class="dv">1</span>,               <span class="co"># ti = 1 year (equal FU for all)</span></span>
+<span id="cb15-23"><a href="#cb15-23" tabindex="-1"></a>    <span class="at">dropout_rate     =</span> <span class="dv">0</span>,</span>
+<span id="cb15-24"><a href="#cb15-24" tabindex="-1"></a>    <span class="at">test_type        =</span> <span class="st">&quot;wald&quot;</span></span>
+<span id="cb15-25"><a href="#cb15-25" tabindex="-1"></a>  )</span>
+<span id="cb15-26"><a href="#cb15-26" tabindex="-1"></a>  <span class="fu">ceiling</span>(res<span class="sc">$</span>n1)</span>
+<span id="cb15-27"><a href="#cb15-27" tabindex="-1"></a>}, friede_scenarios<span class="sc">$</span>theta, friede_scenarios<span class="sc">$</span>power)</span>
+<span id="cb15-28"><a href="#cb15-28" tabindex="-1"></a></span>
+<span id="cb15-29"><a href="#cb15-29" tabindex="-1"></a>published_n0 <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">147</span>, <span class="dv">370</span>, <span class="dv">196</span>, <span class="dv">496</span>)</span>
+<span id="cb15-30"><a href="#cb15-30" tabindex="-1"></a></span>
+<span id="cb15-31"><a href="#cb15-31" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb15-32"><a href="#cb15-32" tabindex="-1"></a>  <span class="fu">data.frame</span>(</span>
+<span id="cb15-33"><a href="#cb15-33" tabindex="-1"></a>    <span class="at">theta     =</span> friede_scenarios<span class="sc">$</span>theta,</span>
+<span id="cb15-34"><a href="#cb15-34" tabindex="-1"></a>    <span class="at">power     =</span> friede_scenarios<span class="sc">$</span>power,</span>
+<span id="cb15-35"><a href="#cb15-35" tabindex="-1"></a>    <span class="at">published =</span> published_n0,</span>
+<span id="cb15-36"><a href="#cb15-36" tabindex="-1"></a>    <span class="at">gsDesignNB =</span> friede_results,</span>
+<span id="cb15-37"><a href="#cb15-37" tabindex="-1"></a>    <span class="at">difference =</span> friede_results <span class="sc">-</span> published_n0,</span>
+<span id="cb15-38"><a href="#cb15-38" tabindex="-1"></a>    <span class="at">within_one =</span> <span class="fu">ifelse</span>(<span class="fu">abs</span>(friede_results <span class="sc">-</span> published_n0) <span class="sc">&lt;=</span> <span class="dv">1</span>, <span class="st">&quot;Yes&quot;</span>, <span class="st">&quot;No&quot;</span>)</span>
+<span id="cb15-39"><a href="#cb15-39" tabindex="-1"></a>  ),</span>
+<span id="cb15-40"><a href="#cb15-40" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">&quot;Friede &amp; Schmidli (2010) Table 1: fixed-design validation.&quot;</span></span>
+<span id="cb15-41"><a href="#cb15-41" tabindex="-1"></a>)</span></code></pre></div>
+<table>
+<caption>Friede &amp; Schmidli (2010) Table 1: fixed-design
+validation.</caption>
+<thead>
+<tr class="header">
+<th align="right">theta</th>
+<th align="right">power</th>
+<th align="right">published</th>
+<th align="right">gsDesignNB</th>
+<th align="right">difference</th>
+<th align="left">within_one</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.7</td>
+<td align="right">0.8</td>
+<td align="right">147</td>
+<td align="right">147</td>
+<td align="right">0</td>
+<td align="left">Yes</td>
+</tr>
+<tr class="even">
+<td align="right">0.8</td>
+<td align="right">0.8</td>
+<td align="right">370</td>
+<td align="right">371</td>
+<td align="right">1</td>
+<td align="left">Yes</td>
+</tr>
+<tr class="odd">
+<td align="right">0.7</td>
+<td align="right">0.9</td>
+<td align="right">196</td>
+<td align="right">197</td>
+<td align="right">1</td>
+<td align="left">Yes</td>
+</tr>
+<tr class="even">
+<td align="right">0.8</td>
+<td align="right">0.9</td>
+<td align="right">496</td>
+<td align="right">496</td>
+<td align="right">0</td>
+<td align="left">Yes</td>
+</tr>
+</tbody>
+</table>
+<p>The replicated values match the published table exactly or within one
+subject per arm, which is the expected resolution for small differences
+in rounding conventions.</p>
+</div>
+<div id="non-inferiority-extension" class="section level3">
+<h3>Non-inferiority extension</h3>
+<p>Friede &amp; Schmidli also consider a non-inferiority design using
+the COPD combination therapy (Calverley et al.) as active control, with
+a 15% non-inferiority margin:</p>
+<ul>
+<li>Control (combination therapy): <span class="math inline">\(\lambda_0
+= 1.16\)</span>/year</li>
+<li>Shape: <span class="math inline">\(\phi = 0.46\)</span></li>
+<li>Rate ratio: <span class="math inline">\(\theta = 1.0\)</span> (no
+difference under <span class="math inline">\(H_1\)</span>)</li>
+<li>Margin: <span class="math inline">\(\text{rr}_0 = 1.15\)</span></li>
+</ul>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a>friede_ni <span class="ot">&lt;-</span> <span class="fu">sample_size_nbinom</span>(</span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a>  <span class="at">lambda1          =</span> <span class="fl">1.16</span>,                <span class="co"># active control rate</span></span>
+<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a>  <span class="at">lambda2          =</span> <span class="fl">1.16</span>,                <span class="co"># experimental (no difference)</span></span>
+<span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a>  <span class="at">dispersion       =</span> <span class="fl">0.46</span>,</span>
+<span id="cb16-5"><a href="#cb16-5" tabindex="-1"></a>  <span class="at">power            =</span> <span class="fl">0.80</span>,</span>
+<span id="cb16-6"><a href="#cb16-6" tabindex="-1"></a>  <span class="at">alpha            =</span> <span class="fl">0.025</span>,</span>
+<span id="cb16-7"><a href="#cb16-7" tabindex="-1"></a>  <span class="at">sided            =</span> <span class="dv">1</span>,</span>
+<span id="cb16-8"><a href="#cb16-8" tabindex="-1"></a>  <span class="at">ratio            =</span> <span class="dv">1</span>,</span>
+<span id="cb16-9"><a href="#cb16-9" tabindex="-1"></a>  <span class="at">rr0              =</span> <span class="fl">1.15</span>,               <span class="co"># NI margin</span></span>
+<span id="cb16-10"><a href="#cb16-10" tabindex="-1"></a>  <span class="at">accrual_rate     =</span> <span class="dv">100</span>,</span>
+<span id="cb16-11"><a href="#cb16-11" tabindex="-1"></a>  <span class="at">accrual_duration =</span> <span class="dv">1</span>,</span>
+<span id="cb16-12"><a href="#cb16-12" tabindex="-1"></a>  <span class="at">trial_duration   =</span> <span class="dv">2</span>,</span>
+<span id="cb16-13"><a href="#cb16-13" tabindex="-1"></a>  <span class="at">max_followup     =</span> <span class="dv">1</span>,</span>
+<span id="cb16-14"><a href="#cb16-14" tabindex="-1"></a>  <span class="at">dropout_rate     =</span> <span class="dv">0</span>,</span>
+<span id="cb16-15"><a href="#cb16-15" tabindex="-1"></a>  <span class="at">test_type        =</span> <span class="st">&quot;wald&quot;</span></span>
+<span id="cb16-16"><a href="#cb16-16" tabindex="-1"></a>)</span>
+<span id="cb16-17"><a href="#cb16-17" tabindex="-1"></a></span>
+<span id="cb16-18"><a href="#cb16-18" tabindex="-1"></a><span class="fu">summary</span>(friede_ni)</span>
+<span id="cb16-19"><a href="#cb16-19" tabindex="-1"></a><span class="co">#&gt; Fixed sample size design for negative binomial outcome, total sample size 2126</span></span>
+<span id="cb16-20"><a href="#cb16-20" tabindex="-1"></a><span class="co">#&gt; (n1=1063, n2=1063), 80 percent power, 2.5 percent (1-sided) Type I error.</span></span>
+<span id="cb16-21"><a href="#cb16-21" tabindex="-1"></a><span class="co">#&gt; Control rate 1.1600, treatment rate 1.1600, risk ratio 1.0000, null hypothesis</span></span>
+<span id="cb16-22"><a href="#cb16-22" tabindex="-1"></a><span class="co">#&gt; RR 1.1500, dispersion 0.4600. Accrual duration 1.0, trial duration 2.0, average</span></span>
+<span id="cb16-23"><a href="#cb16-23" tabindex="-1"></a><span class="co">#&gt; exposure 1.00. Expected events 2466.2. Randomization ratio 1:1.</span></span></code></pre></div>
+<p>This parallels the FLAME NI design above, but with a lower event rate
+and different dispersion — both are COPD trials with identical 15%
+non-inferiority margins.</p>
+</div>
+</div>
+<div id="mutze-et-al.---group-sequential-parameterization-examples" class="section level2">
+<h2>Mutze et al. - group sequential parameterization examples</h2>
+<p>Mutze et al. <span class="citation">(2019)</span> extended the
+fixed-design NB sample size formula to group sequential designs and
+provide Tables 4 and 5 with information and sample size calculations
+under O’Brien-Fleming and Pocock spending functions.</p>
+<div id="fixed-design-information" class="section level3">
+<h3>Fixed-design information</h3>
+<p>The tables report the fixed-design statistical information <span class="math inline">\(I_{\text{fix}}\)</span> and corresponding <span class="math inline">\(n_1\)</span> per arm. Their shape parameter <span class="math inline">\(\kappa\)</span> is <strong>the inverse</strong> of
+the <code>gsDesignNB</code> dispersion <span class="math inline">\(k\)</span>: <span class="math inline">\(\kappa =
+1/k\)</span>.</p>
+<p><strong>Heart failure scenarios</strong> (Table 4): enrollment 15
+months, study 48 months, variable follow-up (33–48 months), annualized
+rates.</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a><span class="co"># Mutze Table 4: HF scenarios, κ=2 (k=0.5), θ=0.70</span></span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a><span class="co"># Their λ₁=λ₂ under H₀ gives the &quot;overall&quot; rate; under H₁ λ₂=θ·λ₁</span></span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a><span class="co"># We verify a subset of fixed-design n₁ values</span></span>
+<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a>mutze_hf <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(</span>
+<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a>  <span class="at">lambda_annual =</span> <span class="fu">c</span>(<span class="fl">0.08</span>, <span class="fl">0.10</span>, <span class="fl">0.12</span>, <span class="fl">0.14</span>),</span>
+<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a>  <span class="at">theta         =</span> <span class="fu">c</span>(<span class="fl">0.70</span>, <span class="fl">0.80</span>),</span>
+<span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a>  <span class="at">kappa         =</span> <span class="dv">2</span>,</span>
+<span id="cb17-8"><a href="#cb17-8" tabindex="-1"></a>  <span class="at">power         =</span> <span class="fu">c</span>(<span class="fl">0.80</span>, <span class="fl">0.90</span>)</span>
+<span id="cb17-9"><a href="#cb17-9" tabindex="-1"></a>)</span>
+<span id="cb17-10"><a href="#cb17-10" tabindex="-1"></a></span>
+<span id="cb17-11"><a href="#cb17-11" tabindex="-1"></a>mutze_hf_results <span class="ot">&lt;-</span> <span class="fu">mapply</span>(<span class="cf">function</span>(lam, theta, kappa, pwr) {</span>
+<span id="cb17-12"><a href="#cb17-12" tabindex="-1"></a>  k <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">/</span> kappa</span>
+<span id="cb17-13"><a href="#cb17-13" tabindex="-1"></a>  <span class="co"># Rates are annualized; follow-up is variable (15-mo enrollment, 48-mo study)</span></span>
+<span id="cb17-14"><a href="#cb17-14" tabindex="-1"></a>  <span class="co"># Convert to monthly for enrollment/trial_duration consistency</span></span>
+<span id="cb17-15"><a href="#cb17-15" tabindex="-1"></a>  lam_mo <span class="ot">&lt;-</span> lam <span class="sc">/</span> <span class="dv">12</span></span>
+<span id="cb17-16"><a href="#cb17-16" tabindex="-1"></a>  res <span class="ot">&lt;-</span> <span class="fu">sample_size_nbinom</span>(</span>
+<span id="cb17-17"><a href="#cb17-17" tabindex="-1"></a>    <span class="at">lambda1          =</span> lam_mo,              <span class="co"># control rate (monthly)</span></span>
+<span id="cb17-18"><a href="#cb17-18" tabindex="-1"></a>    <span class="at">lambda2          =</span> theta <span class="sc">*</span> lam_mo,      <span class="co"># experimental rate</span></span>
+<span id="cb17-19"><a href="#cb17-19" tabindex="-1"></a>    <span class="at">dispersion       =</span> k,</span>
+<span id="cb17-20"><a href="#cb17-20" tabindex="-1"></a>    <span class="at">power            =</span> pwr,</span>
+<span id="cb17-21"><a href="#cb17-21" tabindex="-1"></a>    <span class="at">alpha            =</span> <span class="fl">0.025</span>,</span>
+<span id="cb17-22"><a href="#cb17-22" tabindex="-1"></a>    <span class="at">sided            =</span> <span class="dv">1</span>,</span>
+<span id="cb17-23"><a href="#cb17-23" tabindex="-1"></a>    <span class="at">ratio            =</span> <span class="dv">1</span>,</span>
+<span id="cb17-24"><a href="#cb17-24" tabindex="-1"></a>    <span class="at">accrual_rate     =</span> <span class="dv">100</span>,</span>
+<span id="cb17-25"><a href="#cb17-25" tabindex="-1"></a>    <span class="at">accrual_duration =</span> <span class="dv">15</span>,                  <span class="co"># 15 months enrollment</span></span>
+<span id="cb17-26"><a href="#cb17-26" tabindex="-1"></a>    <span class="at">trial_duration   =</span> <span class="dv">48</span>,                  <span class="co"># 48 months study</span></span>
+<span id="cb17-27"><a href="#cb17-27" tabindex="-1"></a>    <span class="at">dropout_rate     =</span> <span class="dv">0</span>,</span>
+<span id="cb17-28"><a href="#cb17-28" tabindex="-1"></a>    <span class="at">test_type        =</span> <span class="st">&quot;wald&quot;</span></span>
+<span id="cb17-29"><a href="#cb17-29" tabindex="-1"></a>  )</span>
+<span id="cb17-30"><a href="#cb17-30" tabindex="-1"></a>  <span class="fu">ceiling</span>(res<span class="sc">$</span>n1)</span>
+<span id="cb17-31"><a href="#cb17-31" tabindex="-1"></a>}, mutze_hf<span class="sc">$</span>lambda_annual, mutze_hf<span class="sc">$</span>theta, mutze_hf<span class="sc">$</span>kappa, mutze_hf<span class="sc">$</span>power)</span>
+<span id="cb17-32"><a href="#cb17-32" tabindex="-1"></a></span>
+<span id="cb17-33"><a href="#cb17-33" tabindex="-1"></a>mutze_hf<span class="sc">$</span>k <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">/</span> mutze_hf<span class="sc">$</span>kappa</span>
+<span id="cb17-34"><a href="#cb17-34" tabindex="-1"></a>mutze_hf<span class="sc">$</span>n1_gsDesignNB <span class="ot">&lt;-</span> mutze_hf_results</span>
+<span id="cb17-35"><a href="#cb17-35" tabindex="-1"></a></span>
+<span id="cb17-36"><a href="#cb17-36" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb17-37"><a href="#cb17-37" tabindex="-1"></a>  mutze_hf[, <span class="fu">c</span>(<span class="st">&quot;lambda_annual&quot;</span>, <span class="st">&quot;theta&quot;</span>, <span class="st">&quot;k&quot;</span>, <span class="st">&quot;power&quot;</span>, <span class="st">&quot;n1_gsDesignNB&quot;</span>)],</span>
+<span id="cb17-38"><a href="#cb17-38" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">&quot;Mutze et al. (2019): HF fixed-design n₁ (κ=2, k=0.5).&quot;</span></span>
+<span id="cb17-39"><a href="#cb17-39" tabindex="-1"></a>)</span></code></pre></div>
+<table>
+<caption>Mutze et al. (2019): HF fixed-design n₁ (κ=2, k=0.5).</caption>
+<thead>
+<tr class="header">
+<th align="right">lambda_annual</th>
+<th align="right">theta</th>
+<th align="right">k</th>
+<th align="right">power</th>
+<th align="right">n1_gsDesignNB</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.08</td>
+<td align="right">0.7</td>
+<td align="right">0.5</td>
+<td align="right">0.8</td>
+<td align="right">618</td>
+</tr>
+<tr class="even">
+<td align="right">0.10</td>
+<td align="right">0.7</td>
+<td align="right">0.5</td>
+<td align="right">0.8</td>
+<td align="right">507</td>
+</tr>
+<tr class="odd">
+<td align="right">0.12</td>
+<td align="right">0.7</td>
+<td align="right">0.5</td>
+<td align="right">0.8</td>
+<td align="right">433</td>
+</tr>
+<tr class="even">
+<td align="right">0.14</td>
+<td align="right">0.7</td>
+<td align="right">0.5</td>
+<td align="right">0.8</td>
+<td align="right">380</td>
+</tr>
+<tr class="odd">
+<td align="right">0.08</td>
+<td align="right">0.8</td>
+<td align="right">0.5</td>
+<td align="right">0.8</td>
+<td align="right">1474</td>
+</tr>
+<tr class="even">
+<td align="right">0.10</td>
+<td align="right">0.8</td>
+<td align="right">0.5</td>
+<td align="right">0.8</td>
+<td align="right">1211</td>
+</tr>
+<tr class="odd">
+<td align="right">0.12</td>
+<td align="right">0.8</td>
+<td align="right">0.5</td>
+<td align="right">0.8</td>
+<td align="right">1036</td>
+</tr>
+<tr class="even">
+<td align="right">0.14</td>
+<td align="right">0.8</td>
+<td align="right">0.5</td>
+<td align="right">0.8</td>
+<td align="right">911</td>
+</tr>
+<tr class="odd">
+<td align="right">0.08</td>
+<td align="right">0.7</td>
+<td align="right">0.5</td>
+<td align="right">0.9</td>
+<td align="right">827</td>
+</tr>
+<tr class="even">
+<td align="right">0.10</td>
+<td align="right">0.7</td>
+<td align="right">0.5</td>
+<td align="right">0.9</td>
+<td align="right">678</td>
+</tr>
+<tr class="odd">
+<td align="right">0.12</td>
+<td align="right">0.7</td>
+<td align="right">0.5</td>
+<td align="right">0.9</td>
+<td align="right">579</td>
+</tr>
+<tr class="even">
+<td align="right">0.14</td>
+<td align="right">0.7</td>
+<td align="right">0.5</td>
+<td align="right">0.9</td>
+<td align="right">509</td>
+</tr>
+<tr class="odd">
+<td align="right">0.08</td>
+<td align="right">0.8</td>
+<td align="right">0.5</td>
+<td align="right">0.9</td>
+<td align="right">1972</td>
+</tr>
+<tr class="even">
+<td align="right">0.10</td>
+<td align="right">0.8</td>
+<td align="right">0.5</td>
+<td align="right">0.9</td>
+<td align="right">1621</td>
+</tr>
+<tr class="odd">
+<td align="right">0.12</td>
+<td align="right">0.8</td>
+<td align="right">0.5</td>
+<td align="right">0.9</td>
+<td align="right">1386</td>
+</tr>
+<tr class="even">
+<td align="right">0.14</td>
+<td align="right">0.8</td>
+<td align="right">0.5</td>
+<td align="right">0.9</td>
+<td align="right">1219</td>
+</tr>
+</tbody>
+</table>
+<p><strong>MS scenarios</strong> (Table 5): fixed 6-month follow-up,
+monthly CUAL rates.</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a><span class="co"># Mutze Table 5: MS scenarios, κ=2 (k=0.5), fixed 6-month FU</span></span>
+<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a>mutze_ms <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(</span>
+<span id="cb18-3"><a href="#cb18-3" tabindex="-1"></a>  <span class="at">lambda_annual =</span> <span class="fu">c</span>(<span class="dv">6</span>, <span class="dv">8</span>, <span class="dv">10</span>),   <span class="co"># annualized monthly CUAL rates</span></span>
+<span id="cb18-4"><a href="#cb18-4" tabindex="-1"></a>  <span class="at">theta         =</span> <span class="fu">c</span>(<span class="fl">0.50</span>, <span class="fl">0.70</span>),</span>
+<span id="cb18-5"><a href="#cb18-5" tabindex="-1"></a>  <span class="at">kappa         =</span> <span class="dv">2</span>,</span>
+<span id="cb18-6"><a href="#cb18-6" tabindex="-1"></a>  <span class="at">power         =</span> <span class="fu">c</span>(<span class="fl">0.80</span>, <span class="fl">0.90</span>)</span>
+<span id="cb18-7"><a href="#cb18-7" tabindex="-1"></a>)</span>
+<span id="cb18-8"><a href="#cb18-8" tabindex="-1"></a></span>
+<span id="cb18-9"><a href="#cb18-9" tabindex="-1"></a>mutze_ms_results <span class="ot">&lt;-</span> <span class="fu">mapply</span>(<span class="cf">function</span>(lam, theta, kappa, pwr) {</span>
+<span id="cb18-10"><a href="#cb18-10" tabindex="-1"></a>  k <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">/</span> kappa</span>
+<span id="cb18-11"><a href="#cb18-11" tabindex="-1"></a>  lam_mo <span class="ot">&lt;-</span> lam <span class="sc">/</span> <span class="dv">12</span>          <span class="co"># monthly rate</span></span>
+<span id="cb18-12"><a href="#cb18-12" tabindex="-1"></a>  res <span class="ot">&lt;-</span> <span class="fu">sample_size_nbinom</span>(</span>
+<span id="cb18-13"><a href="#cb18-13" tabindex="-1"></a>    <span class="at">lambda1          =</span> lam_mo,</span>
+<span id="cb18-14"><a href="#cb18-14" tabindex="-1"></a>    <span class="at">lambda2          =</span> theta <span class="sc">*</span> lam_mo,</span>
+<span id="cb18-15"><a href="#cb18-15" tabindex="-1"></a>    <span class="at">dispersion       =</span> k,</span>
+<span id="cb18-16"><a href="#cb18-16" tabindex="-1"></a>    <span class="at">power            =</span> pwr,</span>
+<span id="cb18-17"><a href="#cb18-17" tabindex="-1"></a>    <span class="at">alpha            =</span> <span class="fl">0.025</span>,</span>
+<span id="cb18-18"><a href="#cb18-18" tabindex="-1"></a>    <span class="at">sided            =</span> <span class="dv">1</span>,</span>
+<span id="cb18-19"><a href="#cb18-19" tabindex="-1"></a>    <span class="at">ratio            =</span> <span class="dv">1</span>,</span>
+<span id="cb18-20"><a href="#cb18-20" tabindex="-1"></a>    <span class="at">accrual_rate     =</span> <span class="dv">100</span>,</span>
+<span id="cb18-21"><a href="#cb18-21" tabindex="-1"></a>    <span class="at">accrual_duration =</span> <span class="dv">1</span>,</span>
+<span id="cb18-22"><a href="#cb18-22" tabindex="-1"></a>    <span class="at">trial_duration   =</span> <span class="dv">7</span>,       <span class="co"># 6-month FU + enrollment</span></span>
+<span id="cb18-23"><a href="#cb18-23" tabindex="-1"></a>    <span class="at">max_followup     =</span> <span class="dv">6</span>,       <span class="co"># fixed 6 months</span></span>
+<span id="cb18-24"><a href="#cb18-24" tabindex="-1"></a>    <span class="at">dropout_rate     =</span> <span class="dv">0</span>,</span>
+<span id="cb18-25"><a href="#cb18-25" tabindex="-1"></a>    <span class="at">test_type        =</span> <span class="st">&quot;wald&quot;</span></span>
+<span id="cb18-26"><a href="#cb18-26" tabindex="-1"></a>  )</span>
+<span id="cb18-27"><a href="#cb18-27" tabindex="-1"></a>  <span class="fu">ceiling</span>(res<span class="sc">$</span>n1)</span>
+<span id="cb18-28"><a href="#cb18-28" tabindex="-1"></a>}, mutze_ms<span class="sc">$</span>lambda_annual, mutze_ms<span class="sc">$</span>theta, mutze_ms<span class="sc">$</span>kappa, mutze_ms<span class="sc">$</span>power)</span>
+<span id="cb18-29"><a href="#cb18-29" tabindex="-1"></a></span>
+<span id="cb18-30"><a href="#cb18-30" tabindex="-1"></a>mutze_ms<span class="sc">$</span>k <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">/</span> mutze_ms<span class="sc">$</span>kappa</span>
+<span id="cb18-31"><a href="#cb18-31" tabindex="-1"></a>mutze_ms<span class="sc">$</span>n1_gsDesignNB <span class="ot">&lt;-</span> mutze_ms_results</span>
+<span id="cb18-32"><a href="#cb18-32" tabindex="-1"></a></span>
+<span id="cb18-33"><a href="#cb18-33" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb18-34"><a href="#cb18-34" tabindex="-1"></a>  mutze_ms[, <span class="fu">c</span>(<span class="st">&quot;lambda_annual&quot;</span>, <span class="st">&quot;theta&quot;</span>, <span class="st">&quot;k&quot;</span>, <span class="st">&quot;power&quot;</span>, <span class="st">&quot;n1_gsDesignNB&quot;</span>)],</span>
+<span id="cb18-35"><a href="#cb18-35" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">&quot;Mutze et al. (2019): MS fixed-design n₁ (κ=2, k=0.5).&quot;</span></span>
+<span id="cb18-36"><a href="#cb18-36" tabindex="-1"></a>)</span></code></pre></div>
+<table>
+<caption>Mutze et al. (2019): MS fixed-design n₁ (κ=2, k=0.5).</caption>
+<thead>
+<tr class="header">
+<th align="right">lambda_annual</th>
+<th align="right">theta</th>
+<th align="right">k</th>
+<th align="right">power</th>
+<th align="right">n1_gsDesignNB</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">6</td>
+<td align="right">0.5</td>
+<td align="right">0.5</td>
+<td align="right">0.8</td>
+<td align="right">33</td>
+</tr>
+<tr class="even">
+<td align="right">8</td>
+<td align="right">0.5</td>
+<td align="right">0.5</td>
+<td align="right">0.8</td>
+<td align="right">29</td>
+</tr>
+<tr class="odd">
+<td align="right">10</td>
+<td align="right">0.5</td>
+<td align="right">0.5</td>
+<td align="right">0.8</td>
+<td align="right">27</td>
+</tr>
+<tr class="even">
+<td align="right">6</td>
+<td align="right">0.7</td>
+<td align="right">0.5</td>
+<td align="right">0.8</td>
+<td align="right">112</td>
+</tr>
+<tr class="odd">
+<td align="right">8</td>
+<td align="right">0.7</td>
+<td align="right">0.5</td>
+<td align="right">0.8</td>
+<td align="right">100</td>
+</tr>
+<tr class="even">
+<td align="right">10</td>
+<td align="right">0.7</td>
+<td align="right">0.5</td>
+<td align="right">0.8</td>
+<td align="right">92</td>
+</tr>
+<tr class="odd">
+<td align="right">6</td>
+<td align="right">0.5</td>
+<td align="right">0.5</td>
+<td align="right">0.9</td>
+<td align="right">44</td>
+</tr>
+<tr class="even">
+<td align="right">8</td>
+<td align="right">0.5</td>
+<td align="right">0.5</td>
+<td align="right">0.9</td>
+<td align="right">39</td>
+</tr>
+<tr class="odd">
+<td align="right">10</td>
+<td align="right">0.5</td>
+<td align="right">0.5</td>
+<td align="right">0.9</td>
+<td align="right">35</td>
+</tr>
+<tr class="even">
+<td align="right">6</td>
+<td align="right">0.7</td>
+<td align="right">0.5</td>
+<td align="right">0.9</td>
+<td align="right">150</td>
+</tr>
+<tr class="odd">
+<td align="right">8</td>
+<td align="right">0.7</td>
+<td align="right">0.5</td>
+<td align="right">0.9</td>
+<td align="right">133</td>
+</tr>
+<tr class="even">
+<td align="right">10</td>
+<td align="right">0.7</td>
+<td align="right">0.5</td>
+<td align="right">0.9</td>
+<td align="right">123</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="real-data-reverse-engineering-charm-preserved" class="section level3">
+<h3>Real-data reverse engineering: CHARM-Preserved</h3>
+<p>Mutze et al. Table 1 reports results from the CHARM-Preserved trial
+(candesartan vs placebo in heart failure with preserved ejection
+fraction):</p>
+<ul>
+<li>Placebo: <span class="math inline">\(n = 1509\)</span>, 4374
+person-years, 547 HF admissions</li>
+<li>Candesartan: <span class="math inline">\(n = 1514\)</span>, 4425
+person-years, 392 admissions</li>
+<li>Estimated NB rate ratio: <span class="math inline">\(\hat{\theta} =
+0.71\)</span></li>
+</ul>
+<p>What sample size would <code>sample_size_nbinom()</code> recommend if
+we were designing a new trial with these observed parameters?</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a><span class="co"># Estimate rates from CHARM-Preserved</span></span>
+<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a>rate_placebo   <span class="ot">&lt;-</span> <span class="dv">547</span> <span class="sc">/</span> <span class="dv">4374</span>     <span class="co"># events per person-year</span></span>
+<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a>rate_treatment <span class="ot">&lt;-</span> <span class="dv">392</span> <span class="sc">/</span> <span class="dv">4425</span></span>
+<span id="cb19-4"><a href="#cb19-4" tabindex="-1"></a>rr_observed    <span class="ot">&lt;-</span> rate_treatment <span class="sc">/</span> rate_placebo</span>
+<span id="cb19-5"><a href="#cb19-5" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="#cb19-6" tabindex="-1"></a>charm <span class="ot">&lt;-</span> <span class="fu">sample_size_nbinom</span>(</span>
+<span id="cb19-7"><a href="#cb19-7" tabindex="-1"></a>  <span class="at">lambda1          =</span> rate_placebo,</span>
+<span id="cb19-8"><a href="#cb19-8" tabindex="-1"></a>  <span class="at">lambda2          =</span> rate_treatment,</span>
+<span id="cb19-9"><a href="#cb19-9" tabindex="-1"></a>  <span class="at">dispersion       =</span> <span class="fl">0.5</span>,           <span class="co"># typical HF dispersion</span></span>
+<span id="cb19-10"><a href="#cb19-10" tabindex="-1"></a>  <span class="at">power            =</span> <span class="fl">0.90</span>,</span>
+<span id="cb19-11"><a href="#cb19-11" tabindex="-1"></a>  <span class="at">alpha            =</span> <span class="fl">0.025</span>,</span>
+<span id="cb19-12"><a href="#cb19-12" tabindex="-1"></a>  <span class="at">sided            =</span> <span class="dv">1</span>,</span>
+<span id="cb19-13"><a href="#cb19-13" tabindex="-1"></a>  <span class="at">ratio            =</span> <span class="dv">1</span>,</span>
+<span id="cb19-14"><a href="#cb19-14" tabindex="-1"></a>  <span class="at">accrual_rate     =</span> <span class="dv">100</span>,</span>
+<span id="cb19-15"><a href="#cb19-15" tabindex="-1"></a>  <span class="at">accrual_duration =</span> <span class="dv">12</span>,</span>
+<span id="cb19-16"><a href="#cb19-16" tabindex="-1"></a>  <span class="at">trial_duration   =</span> <span class="dv">48</span>,            <span class="co"># ~4-year study</span></span>
+<span id="cb19-17"><a href="#cb19-17" tabindex="-1"></a>  <span class="at">max_followup     =</span> <span class="dv">36</span>,            <span class="co"># ~3-year median FU</span></span>
+<span id="cb19-18"><a href="#cb19-18" tabindex="-1"></a>  <span class="at">dropout_rate     =</span> <span class="dv">0</span>,</span>
+<span id="cb19-19"><a href="#cb19-19" tabindex="-1"></a>  <span class="at">test_type        =</span> <span class="st">&quot;wald&quot;</span></span>
+<span id="cb19-20"><a href="#cb19-20" tabindex="-1"></a>)</span>
+<span id="cb19-21"><a href="#cb19-21" tabindex="-1"></a></span>
+<span id="cb19-22"><a href="#cb19-22" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb19-23"><a href="#cb19-23" tabindex="-1"></a>  <span class="at">Metric =</span> <span class="fu">c</span>(<span class="st">&quot;Control rate (events/person-year)&quot;</span>, <span class="st">&quot;Rate ratio&quot;</span>,</span>
+<span id="cb19-24"><a href="#cb19-24" tabindex="-1"></a>             <span class="st">&quot;Required N (90% power)&quot;</span>, <span class="st">&quot;CHARM-Preserved actual N&quot;</span>),</span>
+<span id="cb19-25"><a href="#cb19-25" tabindex="-1"></a>  <span class="at">Value  =</span> <span class="fu">c</span>(<span class="fu">round</span>(rate_placebo, <span class="dv">3</span>), <span class="fu">round</span>(rr_observed, <span class="dv">3</span>),</span>
+<span id="cb19-26"><a href="#cb19-26" tabindex="-1"></a>             <span class="fu">ceiling</span>(charm<span class="sc">$</span>n_total), <span class="dv">3023</span>)</span>
+<span id="cb19-27"><a href="#cb19-27" tabindex="-1"></a>) <span class="sc">|&gt;</span> knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">caption =</span> <span class="st">&quot;Design from CHARM-Preserved observed data.&quot;</span>)</span></code></pre></div>
+<table>
+<caption>Design from CHARM-Preserved observed data.</caption>
+<thead>
+<tr class="header">
+<th align="left">Metric</th>
+<th align="right">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Control rate (events/person-year)</td>
+<td align="right">0.125</td>
+</tr>
+<tr class="even">
+<td align="left">Rate ratio</td>
+<td align="right">0.708</td>
+</tr>
+<tr class="odd">
+<td align="left">Required N (90% power)</td>
+<td align="right">272.000</td>
+</tr>
+<tr class="even">
+<td align="left">CHARM-Preserved actual N</td>
+<td align="right">3023.000</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="small-sample-regime-bold-trial" class="section level3">
+<h3>Small-sample regime: BOLD trial</h3>
+<p>The BOLD study (Mutze et al. Table 2) was a dose-ranging trial of
+siponimod in relapsing MS with very small sample sizes — a regime where
+the Wald test’s Type I error inflation is known to be problematic:</p>
+<ul>
+<li>Placebo (<span class="math inline">\(n = 61\)</span>): monthly CUALs
+= 1.39</li>
+<li>Siponimod 2 mg (<span class="math inline">\(n = 45\)</span>):
+monthly CUALs = 0.42, RR = 0.303</li>
+</ul>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" tabindex="-1"></a>bold_wald <span class="ot">&lt;-</span> <span class="fu">sample_size_nbinom</span>(</span>
+<span id="cb20-2"><a href="#cb20-2" tabindex="-1"></a>  <span class="at">lambda1          =</span> <span class="fl">1.39</span>,                <span class="co"># monthly CUAL rate, placebo</span></span>
+<span id="cb20-3"><a href="#cb20-3" tabindex="-1"></a>  <span class="at">lambda2          =</span> <span class="fl">0.42</span>,                <span class="co"># siponimod 2mg</span></span>
+<span id="cb20-4"><a href="#cb20-4" tabindex="-1"></a>  <span class="at">dispersion       =</span> <span class="fl">0.5</span>,                <span class="co"># assumed</span></span>
+<span id="cb20-5"><a href="#cb20-5" tabindex="-1"></a>  <span class="at">power            =</span> <span class="fl">0.80</span>,</span>
+<span id="cb20-6"><a href="#cb20-6" tabindex="-1"></a>  <span class="at">alpha            =</span> <span class="fl">0.025</span>,</span>
+<span id="cb20-7"><a href="#cb20-7" tabindex="-1"></a>  <span class="at">sided            =</span> <span class="dv">1</span>,</span>
+<span id="cb20-8"><a href="#cb20-8" tabindex="-1"></a>  <span class="at">ratio            =</span> <span class="dv">1</span>,</span>
+<span id="cb20-9"><a href="#cb20-9" tabindex="-1"></a>  <span class="at">accrual_rate     =</span> <span class="dv">100</span>,</span>
+<span id="cb20-10"><a href="#cb20-10" tabindex="-1"></a>  <span class="at">accrual_duration =</span> <span class="dv">1</span>,</span>
+<span id="cb20-11"><a href="#cb20-11" tabindex="-1"></a>  <span class="at">trial_duration   =</span> <span class="dv">4</span>,</span>
+<span id="cb20-12"><a href="#cb20-12" tabindex="-1"></a>  <span class="at">max_followup     =</span> <span class="dv">3</span>,                  <span class="co"># 3 months</span></span>
+<span id="cb20-13"><a href="#cb20-13" tabindex="-1"></a>  <span class="at">dropout_rate     =</span> <span class="dv">0</span>,</span>
+<span id="cb20-14"><a href="#cb20-14" tabindex="-1"></a>  <span class="at">test_type        =</span> <span class="st">&quot;wald&quot;</span></span>
+<span id="cb20-15"><a href="#cb20-15" tabindex="-1"></a>)</span>
+<span id="cb20-16"><a href="#cb20-16" tabindex="-1"></a></span>
+<span id="cb20-17"><a href="#cb20-17" tabindex="-1"></a>bold_score <span class="ot">&lt;-</span> <span class="fu">sample_size_nbinom</span>(</span>
+<span id="cb20-18"><a href="#cb20-18" tabindex="-1"></a>  <span class="at">lambda1          =</span> <span class="fl">1.39</span>,</span>
+<span id="cb20-19"><a href="#cb20-19" tabindex="-1"></a>  <span class="at">lambda2          =</span> <span class="fl">0.42</span>,</span>
+<span id="cb20-20"><a href="#cb20-20" tabindex="-1"></a>  <span class="at">dispersion       =</span> <span class="fl">0.5</span>,</span>
+<span id="cb20-21"><a href="#cb20-21" tabindex="-1"></a>  <span class="at">power            =</span> <span class="fl">0.80</span>,</span>
+<span id="cb20-22"><a href="#cb20-22" tabindex="-1"></a>  <span class="at">alpha            =</span> <span class="fl">0.025</span>,</span>
+<span id="cb20-23"><a href="#cb20-23" tabindex="-1"></a>  <span class="at">sided            =</span> <span class="dv">1</span>,</span>
+<span id="cb20-24"><a href="#cb20-24" tabindex="-1"></a>  <span class="at">ratio            =</span> <span class="dv">1</span>,</span>
+<span id="cb20-25"><a href="#cb20-25" tabindex="-1"></a>  <span class="at">accrual_rate     =</span> <span class="dv">100</span>,</span>
+<span id="cb20-26"><a href="#cb20-26" tabindex="-1"></a>  <span class="at">accrual_duration =</span> <span class="dv">1</span>,</span>
+<span id="cb20-27"><a href="#cb20-27" tabindex="-1"></a>  <span class="at">trial_duration   =</span> <span class="dv">4</span>,</span>
+<span id="cb20-28"><a href="#cb20-28" tabindex="-1"></a>  <span class="at">max_followup     =</span> <span class="dv">3</span>,</span>
+<span id="cb20-29"><a href="#cb20-29" tabindex="-1"></a>  <span class="at">dropout_rate     =</span> <span class="dv">0</span>,</span>
+<span id="cb20-30"><a href="#cb20-30" tabindex="-1"></a>  <span class="at">test_type        =</span> <span class="st">&quot;score&quot;</span></span>
+<span id="cb20-31"><a href="#cb20-31" tabindex="-1"></a>)</span>
+<span id="cb20-32"><a href="#cb20-32" tabindex="-1"></a></span>
+<span id="cb20-33"><a href="#cb20-33" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb20-34"><a href="#cb20-34" tabindex="-1"></a>  <span class="at">Test  =</span> <span class="fu">c</span>(<span class="st">&quot;Wald&quot;</span>, <span class="st">&quot;Score&quot;</span>),</span>
+<span id="cb20-35"><a href="#cb20-35" tabindex="-1"></a>  <span class="at">N_per_arm =</span> <span class="fu">c</span>(<span class="fu">ceiling</span>(bold_wald<span class="sc">$</span>n1), <span class="fu">ceiling</span>(bold_score<span class="sc">$</span>n1)),</span>
+<span id="cb20-36"><a href="#cb20-36" tabindex="-1"></a>  <span class="at">N_total   =</span> <span class="fu">c</span>(<span class="fu">ceiling</span>(bold_wald<span class="sc">$</span>n_total), <span class="fu">ceiling</span>(bold_score<span class="sc">$</span>n_total))</span>
+<span id="cb20-37"><a href="#cb20-37" tabindex="-1"></a>) <span class="sc">|&gt;</span> knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb20-38"><a href="#cb20-38" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">&quot;BOLD trial sizing: Wald vs Score (RR = 0.30, high rate).&quot;</span></span>
+<span id="cb20-39"><a href="#cb20-39" tabindex="-1"></a>)</span></code></pre></div>
+<table>
+<caption>BOLD trial sizing: Wald vs Score (RR = 0.30, high
+rate).</caption>
+<thead>
+<tr class="header">
+<th align="left">Test</th>
+<th align="right">N_per_arm</th>
+<th align="right">N_total</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Wald</td>
+<td align="right">12</td>
+<td align="right">24</td>
+</tr>
+<tr class="even">
+<td align="left">Score</td>
+<td align="right">10</td>
+<td align="right">20</td>
+</tr>
+</tbody>
+</table>
+<p>At these small sample sizes, the score test is recommended for the
+final analysis to maintain proper Type I error control (see Mutze et
+al., 2019, Section 5.2).</p>
+</div>
+</div>
+<div id="paradigm-hf-recurrent-event-re-analysis" class="section level2">
+<h2>PARADIGM-HF: recurrent-event re-analysis</h2>
+<p>The PARADIGM-HF trial <span class="citation">(McMurray et al.
+2014)</span> was designed with a time-to-first-event primary endpoint
+(CV death or HF hospitalization) analyzed by Cox regression. The
+protocol specified:</p>
+<ul>
+<li>N = 7,980 (3,990 per arm)</li>
+<li>CV death hazard reduction: 15%, event rate 7%/year in enalapril</li>
+<li>Primary composite rate: 14.5%/year → power ≥ 97%</li>
+<li>O’Brien-Fleming spending, 2 interim analyses at 1/3 and 2/3
+information</li>
+</ul>
+<p>But recurrent HF hospitalizations were also analyzed. What if the
+trial had been sized for recurrent hospitalizations using an NB model?
+Using rates from the gsDesignNB paper (<span class="math inline">\(\sim
+0.3\)</span> events/month, <span class="math inline">\(k \approx
+0.5\)</span>) and a 20% rate reduction:</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a>paradigm_nb <span class="ot">&lt;-</span> <span class="fu">sample_size_nbinom</span>(</span>
+<span id="cb21-2"><a href="#cb21-2" tabindex="-1"></a>  <span class="at">lambda1          =</span> <span class="fl">0.3</span>,                  <span class="co"># HF hospitalization rate, monthly</span></span>
+<span id="cb21-3"><a href="#cb21-3" tabindex="-1"></a>  <span class="at">lambda2          =</span> <span class="fl">0.3</span> <span class="sc">*</span> <span class="fl">0.80</span>,           <span class="co"># 20% reduction</span></span>
+<span id="cb21-4"><a href="#cb21-4" tabindex="-1"></a>  <span class="at">dispersion       =</span> <span class="fl">0.5</span>,</span>
+<span id="cb21-5"><a href="#cb21-5" tabindex="-1"></a>  <span class="at">power            =</span> <span class="fl">0.90</span>,</span>
+<span id="cb21-6"><a href="#cb21-6" tabindex="-1"></a>  <span class="at">alpha            =</span> <span class="fl">0.025</span>,</span>
+<span id="cb21-7"><a href="#cb21-7" tabindex="-1"></a>  <span class="at">sided            =</span> <span class="dv">1</span>,</span>
+<span id="cb21-8"><a href="#cb21-8" tabindex="-1"></a>  <span class="at">ratio            =</span> <span class="dv">1</span>,</span>
+<span id="cb21-9"><a href="#cb21-9" tabindex="-1"></a>  <span class="at">accrual_rate     =</span> <span class="dv">362</span>,                  <span class="co"># ~7,980 over 22 months</span></span>
+<span id="cb21-10"><a href="#cb21-10" tabindex="-1"></a>  <span class="at">accrual_duration =</span> <span class="dv">22</span>,</span>
+<span id="cb21-11"><a href="#cb21-11" tabindex="-1"></a>  <span class="at">trial_duration   =</span> <span class="dv">43</span>,                   <span class="co"># 22 enrollment + 21 minimum FU</span></span>
+<span id="cb21-12"><a href="#cb21-12" tabindex="-1"></a>  <span class="at">dropout_rate     =</span> <span class="dv">0</span>,</span>
+<span id="cb21-13"><a href="#cb21-13" tabindex="-1"></a>  <span class="at">test_type        =</span> <span class="st">&quot;wald&quot;</span></span>
+<span id="cb21-14"><a href="#cb21-14" tabindex="-1"></a>)</span>
+<span id="cb21-15"><a href="#cb21-15" tabindex="-1"></a></span>
+<span id="cb21-16"><a href="#cb21-16" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb21-17"><a href="#cb21-17" tabindex="-1"></a>  <span class="at">Design      =</span> <span class="fu">c</span>(<span class="st">&quot;NB recurrent events (hypothetical)&quot;</span>,</span>
+<span id="cb21-18"><a href="#cb21-18" tabindex="-1"></a>                   <span class="st">&quot;Cox time-to-first (protocol)&quot;</span>),</span>
+<span id="cb21-19"><a href="#cb21-19" tabindex="-1"></a>  <span class="at">N           =</span> <span class="fu">c</span>(<span class="fu">ceiling</span>(paradigm_nb<span class="sc">$</span>n_total), <span class="dv">7980</span>),</span>
+<span id="cb21-20"><a href="#cb21-20" tabindex="-1"></a>  <span class="at">Endpoint    =</span> <span class="fu">c</span>(<span class="st">&quot;Recurrent HF hospitalizations&quot;</span>, <span class="st">&quot;CV death or first HF hosp.&quot;</span>)</span>
+<span id="cb21-21"><a href="#cb21-21" tabindex="-1"></a>) <span class="sc">|&gt;</span> knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb21-22"><a href="#cb21-22" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">&quot;PARADIGM-HF: NB recurrent-event sizing vs actual protocol.&quot;</span></span>
+<span id="cb21-23"><a href="#cb21-23" tabindex="-1"></a>)</span></code></pre></div>
+<table>
+<caption>PARADIGM-HF: NB recurrent-event sizing vs actual
+protocol.</caption>
+<colgroup>
+<col width="50%" />
+<col width="7%" />
+<col width="42%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Design</th>
+<th align="right">N</th>
+<th align="left">Endpoint</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">NB recurrent events (hypothetical)</td>
+<td align="right">538</td>
+<td align="left">Recurrent HF hospitalizations</td>
+</tr>
+<tr class="even">
+<td align="left">Cox time-to-first (protocol)</td>
+<td align="right">7980</td>
+<td align="left">CV death or first HF hosp.</td>
+</tr>
+</tbody>
+</table>
+<p>This illustrates a key trade-off: time-to-first-event designs require
+more patients but capture mortality; recurrent-event NB designs use
+information from all events and can be more efficient for rate-based
+endpoints.</p>
+</div>
+<div id="summary" class="section level2">
+<h2>Summary</h2>
+<p>This vignette applied the <code>SKILL.md</code> extraction workflow
+to six published examples spanning COPD, MS, and heart failure. The
+table below summarizes what the skill handled well and where challenges
+arose.</p>
+<div id="successes" class="section level3">
+<h3>Successes</h3>
+<table>
+<colgroup>
+<col width="28%" />
+<col width="40%" />
+<col width="30%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Skill step</th>
+<th align="left">Demonstrated in</th>
+<th align="left">What worked</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Parameter extraction</td>
+<td align="left">FLAME, IMPACT</td>
+<td align="left">All stated parameters (rates, <span class="math inline">\(k\)</span>, power, <span class="math inline">\(\alpha\)</span>, allocation, margin) were
+correctly parsed from protocol text</td>
+</tr>
+<tr class="even">
+<td align="left">Sensible defaults</td>
+<td align="left">FLAME, OPERA</td>
+<td align="left">Follow-up inferred from “annual rate”; accrual pattern
+recognized as irrelevant for fixed-FU sizing</td>
+</tr>
+<tr class="odd">
+<td align="left">Dispersion check</td>
+<td align="left">FLAME, IMPACT</td>
+<td align="left">Values checked against disease-area ranges (COPD: <span class="math inline">\(k \in [0.5, 1.0]\)</span>); no false alarms</td>
+</tr>
+<tr class="even">
+<td align="left">Event gap handling</td>
+<td align="left">IMPACT</td>
+<td align="left">28-day gap automatically triggered Jensen correction;
+sensitivity table showed practical impact</td>
+</tr>
+<tr class="odd">
+<td align="left">Non-inferiority</td>
+<td align="left">FLAME, Friede NI</td>
+<td align="left">NI margin (<span class="math inline">\(\text{rr}_0 =
+1.15\)</span>) correctly distinguished from the treatment effect</td>
+</tr>
+<tr class="even">
+<td align="left">Formula validation</td>
+<td align="left">Friede &amp; Schmidli</td>
+<td align="left">Published <span class="math inline">\(n_0\)</span>
+values matched exactly or within one subject per arm, confirming the
+Wald formula implementation up to rounding</td>
+</tr>
+<tr class="odd">
+<td align="left">Score vs Wald comparison</td>
+<td align="left">FLAME, BOLD</td>
+<td align="left">Both sizing rules computed; difference clearly
+explained in context</td>
+</tr>
+<tr class="even">
+<td align="left">Dropout modeling</td>
+<td align="left">FLAME</td>
+<td align="left">Inflation and exposure-integral approaches separated so
+protocol replication and prospective dropout modeling are not
+conflated</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="challenges" class="section level3">
+<h3>Challenges</h3>
+<table>
+<colgroup>
+<col width="28%" />
+<col width="23%" />
+<col width="17%" />
+<col width="30%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Challenge</th>
+<th align="left">Example</th>
+<th align="left">Issue</th>
+<th align="left">Resolution</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Unstated dispersion</td>
+<td align="left">OPERA</td>
+<td align="left">Protocol sized by t-test; <span class="math inline">\(k\)</span> not given</td>
+<td align="left">Skill must ask user or sweep over plausible range
+(<span class="math inline">\(k \in [0.5, 1.5]\)</span>)</td>
+</tr>
+<tr class="even">
+<td align="left">Inverse parameterization</td>
+<td align="left">Mutze et al.</td>
+<td align="left">Paper uses <span class="math inline">\(\kappa =
+1/k\)</span></td>
+<td align="left">Skill’s dispersion-check step must detect and convert —
+easy to miss</td>
+</tr>
+<tr class="odd">
+<td align="left">Pooled-rate formulation</td>
+<td align="left">Friede &amp; Schmidli</td>
+<td align="left">Paper gives overall <span class="math inline">\(\lambda\)</span>, not per-arm</td>
+<td align="left">Need algebra: <span class="math inline">\(\lambda_0 =
+2\lambda/(1+\theta)\)</span> — skill should prompt for
+clarification</td>
+</tr>
+<tr class="even">
+<td align="left">Unequal allocation</td>
+<td align="left">IMPACT</td>
+<td align="left">2:2:1 three-arm design</td>
+<td align="left">Skill handles pairwise comparisons but user must
+specify which contrast</td>
+</tr>
+<tr class="odd">
+<td align="left">Wrong endpoint family</td>
+<td align="left">PARADIGM-HF</td>
+<td align="left">Primary is Cox, not NB</td>
+<td align="left">Skill correctly flags that NB is not the primary model;
+recurrent-event parameters sourced externally</td>
+</tr>
+<tr class="even">
+<td align="left">Time-unit ambiguity</td>
+<td align="left">Mutze HF vs MS</td>
+<td align="left">Monthly CUALs vs annualized rates in same paper</td>
+<td align="left">Skill must confirm units before computing; mixing units
+is a common error source</td>
+</tr>
+<tr class="odd">
+<td align="left">Small-sample regime</td>
+<td align="left">BOLD</td>
+<td align="left"><span class="math inline">\(n \approx 50\)</span>/arm —
+Wald test inflates Type I error</td>
+<td align="left">Skill recommends score test and simulation
+verification</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="lessons-for-skill-development" class="section level3">
+<h3>Lessons for skill development</h3>
+<ol style="list-style-type: decimal">
+<li><strong>Always confirm dispersion parameterization.</strong> Three
+conventions appear in the literature: <span class="math inline">\(k\)</span> (our convention), <span class="math inline">\(\phi = k\)</span> (Friede &amp; Schmidli), and
+<span class="math inline">\(\kappa = 1/k\)</span> (Mutze). The skill
+should ask whenever the source notation is ambiguous.</li>
+<li><strong>Sweep when <span class="math inline">\(k\)</span> is
+unknown.</strong> When a protocol does not state the dispersion (OPERA,
+PARADIGM-HF), a sensitivity table over plausible values is more useful
+than a single-point answer.</li>
+<li><strong>Flag non-NB primaries.</strong> When the protocol’s primary
+analysis is Cox or another model, the skill should state clearly that
+the NB calculation is exploratory or hypothetical.</li>
+<li><strong>Dropout handling depends on wording.</strong> If dropout is
+a true loss of follow-up, model it through the exposure integral with
+<code>dropout_rate &gt; 0</code>. If the protocol combines dropout with
+non-evaluable or protocol-violator assumptions, an inflation factor may
+be the better replication.</li>
+<li><strong>Event gap matters more at high rates.</strong> The Jensen
+correction had a visible impact for IMPACT (COPD, rate ≈ 0.9/year,
+28-day gap) but would be negligible for MS relapses at 0.3/year.</li>
+</ol>
+</div>
+<div id="practical-notes-for-literature-replication" class="section level3">
+<h3>Practical notes for literature replication</h3>
+<ul>
+<li><strong>Dropout handling.</strong> Modeling dropout through the
+exposure integral (<code>dropout_rate &gt; 0</code>) gives partial
+credit for dropout follow-up. Convert cumulative dropout incidence <span class="math inline">\(p\)</span> to an instantaneous rate:
+<code>dropout_rate = -log(1 - p) / T</code>. Use a simple <span class="math inline">\(N/(1 - p)\)</span> inflation when the protocol
+describes non-evaluable patients, major protocol violators, or a
+conventionally inflated randomized sample size rather than a pure
+dropout process.</li>
+<li><strong>Accrual pattern.</strong> For a fixed-design replication
+where all patients get the same maximum follow-up, the accrual shape
+does not affect N.</li>
+<li><strong>Event gap.</strong> When a protocol does not mention a
+minimum inter-event gap, set <code>event_gap = 0</code>. The Jensen
+correction activates automatically when
+<code>event_gap &gt; 0</code>.</li>
+<li><strong>Dispersion parameterization.</strong> Friede &amp;
+Schmidli’s <span class="math inline">\(\phi\)</span> equals our <span class="math inline">\(k\)</span>. Mutze et al.’s <span class="math inline">\(\kappa\)</span> equals <span class="math inline">\(1/k\)</span>. Always check whether a paper uses
+<span class="math inline">\(\text{Var} = \mu + k\mu^2\)</span> (our
+convention) or the Gamma shape <span class="math inline">\(1/k\)</span>.</li>
+</ul>
+<p>For group sequential designs and SSR studies, see the
+<code>group-sequential-simulation</code>, <code>ssr-example</code>, and
+<code>ssr-simulation-study</code> vignettes.</p>
+</div>
+</div>
+<div id="references" class="section level2 unnumbered">
+<h2 class="unnumbered">References</h2>
+<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
+<div id="ref-friede2010blinded" class="csl-entry">
+Friede, Tim, and Heinz Schmidli. 2010. <span>“Blinded Sample Size
+Reestimation with Negative Binomial Counts in Superiority and
+Non-Inferiority Trials.”</span> <em>Methods of Information in
+Medicine</em> 49 (06): 618–24. <a href="https://doi.org/10.3414/ME09-02-0060">https://doi.org/10.3414/ME09-02-0060</a>.
+</div>
+<div id="ref-hauser2017ocrelizumab" class="csl-entry">
+Hauser, Stephen L, Amit Bar-Or, Giancarlo Comi, Gavin Giovannoni,
+Hans-Peter Hartung, Bernhard Hemmer, Fred Lublin, et al. 2017.
+<span>“Ocrelizumab Versus Interferon Beta-1a in Relapsing Multiple
+Sclerosis.”</span> <em>New England Journal of Medicine</em> 376 (3):
+221–34. <a href="https://doi.org/10.1056/NEJMoa1601277">https://doi.org/10.1056/NEJMoa1601277</a>.
+</div>
+<div id="ref-lipson2018impact" class="csl-entry">
+Lipson, David A, Frank Barnhart, Noushin Brealey, Jean Brooks, Gerard J
+Criner, Nicola C Day, Mark T Dransfield, et al. 2018. <span>“Once-Daily
+Single-Inhaler Triple Versus Dual Therapy in Patients with
+<span>COPD</span>.”</span> <em>New England Journal of Medicine</em> 378
+(18): 1671–80. <a href="https://doi.org/10.1056/NEJMoa1713901">https://doi.org/10.1056/NEJMoa1713901</a>.
+</div>
+<div id="ref-mcmurray2014paradigm" class="csl-entry">
+McMurray, John J V, Milton Packer, Akshay S Desai, Jianjian Gong, Martin
+P Lefkowitz, Adel R Rizkala, Jean L Rouleau, et al. 2014.
+<span>“Angiotensin–Neprilysin Inhibition Versus Enalapril in Heart
+Failure.”</span> <em>New England Journal of Medicine</em> 371 (11):
+993–1004. <a href="https://doi.org/10.1056/NEJMoa1409077">https://doi.org/10.1056/NEJMoa1409077</a>.
+</div>
+<div id="ref-mutze2019group" class="csl-entry">
+Mütze, Tobias, Ekkehard Glimm, Heinz Schmidli, and Tim Friede. 2019.
+<span>“Group Sequential Designs for Negative Binomial Outcomes.”</span>
+<em>Statistical Methods in Medical Research</em> 28 (8): 2326–47. <a href="https://doi.org/10.1177/0962280218773115">https://doi.org/10.1177/0962280218773115</a>.
+</div>
+<div id="ref-wedzicha2016flame" class="csl-entry">
+Wedzicha, Jadwiga A, Dalal Banerji, Kenneth R Chapman, Jørgen Vestbo,
+Nicolas Roche, R Tim Ayers, Chau Thach, Robert Fogel, Francesco
+Patalano, and Claus F Vogelmeier. 2016.
+<span>“Indacaterol–Glycopyrronium Versus Salmeterol–Fluticasone for
+<span>COPD</span>.”</span> <em>New England Journal of Medicine</em> 374
+(23): 2222–34. <a href="https://doi.org/10.1056/NEJMoa1516385">https://doi.org/10.1056/NEJMoa1516385</a>.
+</div>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
