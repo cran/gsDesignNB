@@ -1,5 +1,5 @@
 Package: gsDesignNB
-Version: 0.3.2
+Version: 0.4.0
 Title: Sample Size and Simulation for Negative Binomial Outcomes
 Authors@R: c(
     person("Keaven", "Anderson", email = "keaven_anderson@merck.com", role = c("aut", "cre")),
@@ -28,14 +28,14 @@ BugReports: https://github.com/keaven/gsDesignNB/issues
 Encoding: UTF-8
 Depends: R (>= 4.1.0)
 Imports: data.table, gsDesign (>= 3.10.0), simtrial, stats, MASS
-Suggests: glmmTMB, httpuv, testthat (>= 3.0.0), knitr, rmarkdown,
-        ggplot2, dplyr, gt, scales, shiny, foreach, doFuture, future,
+Suggests: glmmTMB, testthat (>= 3.0.0), knitr, rmarkdown, ggplot2,
+        dplyr, lt (>= 0.5), scales, shiny, foreach, doFuture, future,
         future.apply, gridExtra
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Config/roxygen2/version: 8.0.0
 NeedsCompilation: no
-Packaged: 2026-07-06 19:32:18 UTC; Anderkea
+Packaged: 2026-10-21 18:22:46 UTC; xieyih
 Author: Keaven Anderson [aut, cre],
   Hongtao Zhang [aut],
   Andrea Maes [aut],
@@ -44,4 +44,4 @@ Author: Keaven Anderson [aut, cre],
     <https://ror.org/02891sr49>)
 Maintainer: Keaven Anderson <keaven_anderson@merck.com>
 Repository: CRAN
-Date/Publication: 2026-07-06 20:00:02 UTC
+Date/Publication: 2026-10-22 13:40:02 UTC

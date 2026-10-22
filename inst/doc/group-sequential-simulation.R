@@ -9,7 +9,7 @@ library(gsDesign)
 library(gsDesignNB)
 library(data.table)
 library(ggplot2)
-library(gt)
+library(lt)
 
 ## ----sample-size--------------------------------------------------------------
 # Sample size calculation
@@ -67,8 +67,8 @@ gs_nb |>
     digits = 4,
     ddigits = 2
   ) |>
-  gt() |>
-  tab_header(
+  lt() |>
+  lt_header(
     title = "Group Sequential Design Bounds for Negative Binomial Outcome",
     subtitle = paste0(
       "N = ", ceiling(gs_nb$n_total[gs_nb$k]),
@@ -170,12 +170,12 @@ planning_comparison$Info_Diff <- planning_comparison$Mean_Unblinded_Info -
   planning_comparison$Planned_Info
 
 planning_comparison |>
-  gt() |>
-  tab_header(
+  lt() |>
+  lt_header(
     title = "Design Planning Quantities vs Simulation Means",
     subtitle = sprintf("Based on %d simulated trials", n_sims)
   ) |>
-  cols_label(
+  lt_label(
     Analysis = "Analysis",
     Month = "Month",
     Planned_N = "Planned N",
@@ -191,14 +191,14 @@ planning_comparison |>
     Event_Diff = "Event diff.",
     Info_Diff = "Information diff."
   ) |>
-  fmt_number(
+  lt_format(
     columns = c(
-      Planned_N, Mean_N,
-      Planned_Total_Exposure, Mean_Total_Exposure,
-      Planned_At_Risk_Exposure, Mean_At_Risk_Exposure,
-      Planned_Events, Mean_Events,
-      Planned_Info, Mean_Unblinded_Info,
-      Event_Diff, Info_Diff
+      "Planned_N", "Mean_N",
+      "Planned_Total_Exposure", "Mean_Total_Exposure",
+      "Planned_At_Risk_Exposure", "Mean_At_Risk_Exposure",
+      "Planned_Events", "Mean_Events",
+      "Planned_Info", "Mean_Unblinded_Info",
+      "Event_Diff", "Info_Diff"
     ),
     decimals = 1
   )
@@ -223,19 +223,19 @@ crossing_summary <- data.frame(
 )
 
 crossing_summary |>
-  gt() |>
-  tab_header(
+  lt() |>
+  lt_header(
     title = "Power Comparison: Simulation vs Design",
     subtitle = sprintf("Based on %d simulated trials", n_sims)
   ) |>
-  cols_label(
+  lt_label(
     Analysis = "Analysis",
     Analysis_Time = "Month",
     Sim_Power = "Incremental Power (Sim)",
     Sim_Cum_Power = "Cumulative Power (Sim)",
     Design_Cum_Power = "Cumulative Power (Design)"
   ) |>
-  fmt_percent(columns = c(Sim_Power, Sim_Cum_Power, Design_Cum_Power), decimals = 1)
+  lt_format(columns = c("Sim_Power", "Sim_Cum_Power", "Design_Cum_Power"), decimals = 1, percent = TRUE)
 
 ## ----plot-z-stats, fig.width=7, fig.height=5, fig.alt="Z-statistics across analyses with group sequential boundaries", eval=!is.null(results)----
 # Prepare data for plotting

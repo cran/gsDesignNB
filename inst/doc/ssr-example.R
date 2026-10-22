@@ -9,7 +9,7 @@ library(gsDesignNB)
 library(gsDesign)
 library(data.table)
 library(MASS)
-library(gt)
+library(lt)
 
 ## ----initial_design-----------------------------------------------------------
 # Planned parameters
@@ -59,8 +59,8 @@ gsBoundSummary(gs_plan,
     Nname = "Information",
     timename = "Month",
     digits = 4,
-    ddigits = 2) |> gt() |>
-  tab_header(
+    ddigits = 2) |> lt() |>
+  lt_header(
     title = "Group Sequential Design Bounds for Negative Binomial Outcome",
     subtitle = paste0(
       "N = ", ceiling(gs_plan$n_total[gs_plan$k]),
@@ -91,8 +91,8 @@ sim_helper <- sim_ssr_nbinom(
 
 helper_summary <- summarize_ssr_sim(sim_helper, by = c("scenario", "strategy"))
 helper_summary$trial_summary |>
-  gt() |>
-  tab_header(
+  lt() |>
+  lt_header(
     title = "High-level SSR Simulation Summary",
     subtitle = "Expected participants with events and expected events observed are included directly"
   )
@@ -252,8 +252,8 @@ gsBoundSummary(gs_update,
     Nname = "Information",
     timename = "Month",
     digits = 4,
-    ddigits = 2) |> gt() |>
-  tab_header(
+    ddigits = 2) |> lt() |>
+  lt_header(
     title = "Updated Group Sequential Design Bounds",
     subtitle = paste0(
       "Final Information = ", round(final_info, 2)

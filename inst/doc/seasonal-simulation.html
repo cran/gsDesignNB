@@ -566,12 +566,12 @@ inverse of this variance.</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co"># Variance of the treatment effect coefficient</span></span>
 <span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>var_beta <span class="ot">&lt;-</span> <span class="fu">vcov</span>(fit)[<span class="st">&quot;treatmentExperimental&quot;</span>, <span class="st">&quot;treatmentExperimental&quot;</span>]</span>
 <span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="fu">message</span>(<span class="st">&quot;Variance of Treatment Effect (log-scale): &quot;</span>, var_beta)</span>
-<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="co">#&gt; Variance of Treatment Effect (log-scale): 1.37404900110776</span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="co">#&gt; Variance of Treatment Effect (log-scale): 1.37404900110775</span></span>
 <span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a></span>
 <span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="co"># Statistical Information</span></span>
 <span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>info <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">/</span> var_beta</span>
 <span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="fu">message</span>(<span class="st">&quot;Statistical Information: &quot;</span>, info)</span>
-<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt; Statistical Information: 0.727776083090051</span></span></code></pre></div>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt; Statistical Information: 0.727776083090052</span></span></code></pre></div>
 </div>
 </div>
 

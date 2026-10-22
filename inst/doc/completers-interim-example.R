@@ -9,7 +9,6 @@ library(gsDesignNB)
 library(gsDesign)
 library(data.table)
 library(ggplot2)
-library(gt)
 
 ## ----params-------------------------------------------------------------------
 # Parameters
